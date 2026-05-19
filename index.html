@@ -164,19 +164,6 @@
   .field-group input:focus, .field-group select:focus, .field-group textarea:focus { border-color:var(--primary); }
   .field-group textarea { resize:vertical; min-height:80px; }
 
-  /* Autocomplete */
-  .autocomplete-wrap { position:relative; }
-  .autocomplete-list {
-    position:absolute; top:100%; right:0; left:0; background:white;
-    border:2px solid var(--primary); border-top:none; border-radius:0 0 10px 10px;
-    z-index:50; max-height:200px; overflow-y:auto; display:none;
-  }
-  .autocomplete-list.show { display:block; }
-  .autocomplete-item {
-    padding:10px 14px; cursor:pointer; font-size:13px; transition:background 0.15s;
-  }
-  .autocomplete-item:hover { background:var(--bg); }
-
   /* Finance calc */
   .finance-calc {
     background:linear-gradient(135deg, #f8fafc, #eff6ff); border:2px solid var(--border);
@@ -288,9 +275,9 @@
     display:inline-flex; align-items:center; gap:5px; background:var(--bg);
     padding:6px 14px; border-radius:20px; font-size:13px; color:var(--text); font-weight:700; border:1px solid var(--border);
   }
-  .date-filter-wrap { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 12px; border: 2px solid var(--border); }
+  .date-filter-wrap { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 12px; border: 2px solid var(--border); flex-wrap: wrap; }
   .date-filter-wrap label { font-size: 13px; font-weight: 700; color: var(--primary); }
-  .date-filter-wrap input { border: none; outline: none; font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+  .date-filter-wrap input { border: none; outline: none; font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); background:transparent; }
 
   /* Responsive styling */
   @media(max-width:768px) {
@@ -316,7 +303,7 @@
 
   .search-input {
     padding:10px 16px; border:2px solid var(--border); border-radius:10px;
-    font-family:'Cairo',sans-serif; font-size:14px; outline:none; width:260px; transition:border 0.2s;
+    font-family:'Cairo',sans-serif; font-size:14px; outline:none; width:220px; transition:border 0.2s;
   }
   .search-input:focus { border-color:var(--primary); }
 
@@ -418,45 +405,48 @@
       <div class="page-header">
         <div>
           <h2>➕ إضافة مريض جديد</h2>
-          <p>أدخل بيانات المريض والإجراء الطبي</p>
+          <p>أدخل بيانات المريض والإجراء الطبي (يمكنك اختيار تاريخ قديم)</p>
         </div>
         <span class="date-badge">📅 <span id="today-date"></span></span>
       </div>
       <div class="card">
-        <div class="card-title">📋 بيانات المريض</div>
+        <div class="card-title">📋 بيانات المريض المعالج</div>
         <div class="form-grid">
           <div class="field-group">
             <label>اسم المريض *</label>
             <input type="text" id="p-name" placeholder="الاسم كاملاً"/>
           </div>
           <div class="field-group">
-            <label>رقم الهاتف *</label>
+            <label>رقم الهاتف (اختياري)</label>
             <input type="tel" id="p-phone" placeholder="01xxxxxxxxx"/>
           </div>
-          <div class="field-group full">
+          <div class="field-group">
             <label>الإجراء الطبي *</label>
-            <div class="autocomplete-wrap">
-              <input type="text" id="p-procedure" placeholder="اكتب أو اختر الإجراء..." oninput="filterProcedures()" autocomplete="off"/>
-              <div class="autocomplete-list" id="proc-list">
-                <div class="autocomplete-item" onclick="selectProcedure('حشو عصب')">حشو عصب</div>
-                <div class="autocomplete-item" onclick="selectProcedure('حشو')">حشو</div>
-                <div class="autocomplete-item" onclick="selectProcedure('خلع')">خلع</div>
-                <div class="autocomplete-item" onclick="selectProcedure('خلع جراحي')">خلع جراحي</div>
-                <div class="autocomplete-item" onclick="selectProcedure('خلع ضرس عقل')">خلع ضرس عقل</div>
-                <div class="autocomplete-item" onclick="selectProcedure('حشو عصب أطفال')">حشو عصب أطفال</div>
-                <div class="autocomplete-item" onclick="selectProcedure('طربوش')">طربوش</div>
-                <div class="autocomplete-item" onclick="selectProcedure('تركيبة')">تركيبة</div>
-                <div class="autocomplete-item" onclick="selectProcedure('تقويم')">تقويم</div>
-                <div class="autocomplete-item" onclick="selectProcedure('تبييض')">تبييض</div>
-              </div>
-            </div>
+            <select id="p-procedure">
+              <option value="" disabled selected>اختر الإجراء الطبي من هنا...</option>
+              <option value="تنظيف جير">تنظيف جير</option>
+              <option value="حشو عصب">حشو عصب</option>
+              <option value="حشو">حشو</option>
+              <option value="خلع">خلع</option>
+              <option value="خلع جراحي">خلع جراحي</option>
+              <option value="خلع ضرس عقل">خلع ضرس عقل</option>
+              <option value="حشو عصب أطفال">حشو عصب أطفال</option>
+              <option value="طربوش">طربوش</option>
+              <option value="تركيبة">تركيبة</option>
+              <option value="تقويم">تقويم</option>
+              <option value="تبييض">تبييض</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>تاريخ المعاملة والزيارة *</label>
+            <input type="date" id="p-custom-date"/>
           </div>
           <div class="field-group">
             <label>سعر التكلفة الإجمالي (جنيه)</label>
             <input type="number" id="p-total" placeholder="0" oninput="calcFinance()"/>
           </div>
           <div class="field-group">
-            <label>المبلغ المدفوع (جنيه)</label>
+            <label>المبلغ المدفوع حالياً (جنيه)</label>
             <input type="number" id="p-paid" placeholder="0" oninput="calcFinance()"/>
           </div>
         </div>
@@ -498,10 +488,15 @@
     <div class="page" id="page-patients">
       <div class="page-header">
         <div>
-          <h2>👥 ملف المرضى</h2>
-          <p>جميع المرضى المسجلين في العيادة</p>
+          <h2>👥 ملف المرضى السنوي</h2>
+          <p>استعراض وبحث المرضى (يمكن الفلترة بيوم محدد بالكامل)</p>
         </div>
         <div class="actions-row">
+          <div class="date-filter-wrap">
+            <label>📅 عرض تاريخ معين:</label>
+            <input type="date" id="patient-date-filter" onchange="renderPatients()"/>
+            <button class="btn btn-sm" style="background:#e2e8f0; color:var(--text);" onclick="clearPatientDateFilter()">عرض الكل</button>
+          </div>
           <input type="text" class="search-input" id="patient-search" placeholder="🔍 بحث باسم أو هاتف..." oninput="renderPatients()"/>
         </div>
       </div>
@@ -513,8 +508,8 @@
     <div class="page" id="page-accounts">
       <div class="page-header">
         <div>
-          <h2>💰 الحسابات اليومية والشهرية</h2>
-          <p>متابعة المبالغ الكلية والتحصيلات، ونسب ومتبقي الطبيب</p>
+          <h2>💰 الحسابات والتحصيلات الكلية</h2>
+          <p>متابعة المبالغ اليومية والشهرية، ونسب وأرباح الدكتور</p>
         </div>
         <div class="date-filter-wrap">
           <label for="account-date-filter">📅 عرض حسابات يوم:</label>
@@ -526,17 +521,18 @@
       <div class="stats-grid" id="account-stats"></div>
 
       <div class="card">
-        <div class="card-title">📅 تقرير الإجماليات الشهرية (ملخص كل شهر)</div>
-        <div class="table-wrap" id="monthly-report-table"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📊 تفاصيل مرضى ومدفوعات اليوم المحدد</div>
+        <div class="card-title">📊 تفاصيل مرضى ومعاملات اليوم المحدد</div>
         <div class="table-wrap" id="accounts-table"></div>
       </div>
+      
       <div class="card">
-        <div class="card-title">⚠️ إجمالي المرضى الذين لديهم مبالغ متأخرة (كل الأوقات)</div>
+        <div class="card-title">⚠️ إجمالي المبالغ المتأخرة المستحقة على المرضى (كل الأوقات)</div>
         <div class="table-wrap" id="debtors-table"></div>
+      </div>
+
+      <div class="card" style="margin-top:40px; border-top: 4px solid var(--primary);">
+        <div class="card-title">📅 تقرير الملخص والإجماليات الشهرية التلقائي</div>
+        <div class="table-wrap" id="monthly-report-table"></div>
       </div>
     </div>
 
@@ -544,7 +540,12 @@
       <div class="page-header">
         <div>
           <h2>🛍️ المشتريات والمصاريف</h2>
-          <p>تسجيل ومتابعة المواد والمستلزمات ومصاريف العيادة</p>
+          <p>تسجيل ومتابعة المواد وفواتير العيادة بحسب التاريخ</p>
+        </div>
+        <div class="date-filter-wrap">
+          <label>🔍 فلترة المشتريات بتاريخ:</label>
+          <input type="date" id="purchase-date-filter" onchange="renderPurchases()"/>
+          <button class="btn btn-sm" style="background:#e2e8f0; color:var(--text);" onclick="clearPurchaseDateFilter()">عرض الكل</button>
         </div>
       </div>
       <div class="card">
@@ -552,7 +553,7 @@
         <div class="form-grid">
           <div class="field-group">
             <label>اسم المادة / المستلزم *</label>
-            <input type="text" id="pur-name" placeholder="مثال: علبة كمامات، بنج البوتاسيوم..."/>
+            <input type="text" id="pur-name" placeholder="مثال: علبة كمامات، بنج..."/>
           </div>
           <div class="field-group">
             <label>سعر القطعة الواحد (جنيه) *</label>
@@ -567,7 +568,7 @@
             <input type="number" id="pur-price" placeholder="0" readonly style="background:#f1f5f9; font-weight:700; color:var(--danger);"/>
           </div>
           <div class="field-group">
-            <label>تاريخ الشراء *</label>
+            <label>تاريخ الشراء والتقديم *</label>
             <input type="date" id="pur-date"/>
           </div>
           <div class="field-group full">
@@ -587,30 +588,39 @@
     <div class="page" id="page-shortage">
       <div class="page-header">
         <div>
-          <h2>📋 قائمة النواقص</h2>
-          <p>المستلزمات الناقصة في العيادة</p>
+          <h2>📋 قائمة النواقص الطبية</h2>
+          <p>المستلزمات والأدوات الناقصة المطلوب شراؤها للعيادة</p>
+        </div>
+        <div class="date-filter-wrap">
+          <label>🔍 فلترة النواقص بتاريخ الدخول:</label>
+          <input type="date" id="shortage-date-filter" onchange="renderShortages()"/>
+          <button class="btn btn-sm" style="background:#e2e8f0; color:var(--text);" onclick="clearShortageDateFilter()">عرض الكل</button>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">➕ إضافة عنصر جديد</div>
+        <div class="card-title">➕ إضافة عنصر جديد للقائمة</div>
         <div class="form-grid">
           <div class="field-group">
-            <label>اسم العنصر</label>
-            <input type="text" id="sh-name" placeholder="مثال: قفازات طبية"/>
+            <label>اسم العنصر الناقص *</label>
+            <input type="text" id="sh-name" placeholder="مثال: جوانتي طبي مقاس M"/>
           </div>
           <div class="field-group">
             <label>الكمية المطلوبة</label>
             <input type="text" id="sh-qty" placeholder="مثال: 3 علب"/>
           </div>
+          <div class="field-group">
+            <label>تاريخ التسجيل *</label>
+            <input type="date" id="sh-date"/>
+          </div>
           <div class="field-group full">
-            <label>ملاحظات</label>
-            <input type="text" id="sh-note" placeholder="أي ملاحظة إضافية"/>
+            <label>ملاحظات إضافية</label>
+            <input type="text" id="sh-note" placeholder="أي ملاحظة أو تفاصيل عاجلة"/>
           </div>
         </div>
-        <button class="btn btn-success" style="margin-top:12px;" onclick="addShortage()">➕ إضافة</button>
+        <button class="btn btn-success" style="margin-top:12px;" onclick="addShortage()">➕ إضافة للنواقص</button>
       </div>
       <div class="card">
-        <div class="card-title">📦 قائمة النواقص الحالية</div>
+        <div class="card-title">📦 قائمة النواقص الحالية المسجلة</div>
         <div id="shortage-list"><div class="loading">⏳ جاري التحميل...</div></div>
       </div>
     </div>
@@ -665,17 +675,30 @@ function formatDate(ts) {
   return d.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 }
 
+function formatDateISO(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toISOString().split('T')[0];
+}
+
 function formatDateWithTime(ts) {
   if (!ts) return '';
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('ar-EG', {year:'numeric',month:'short',day:'numeric', hour:'2-digit', minute:'2-digit'});
 }
 
-// تهيئة التواريخ الافتراضية للنموذج والفلتر باليوم الحالي للعيادة
+// تهيئة التواريخ الافتراضية باليوم الحالي للعيادة لجميع التبويبات والمدخلات
 const todayISO = new Date().toISOString().split('T')[0];
 document.getElementById('today-date').textContent = new Date().toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
+document.getElementById('p-custom-date').value = todayISO;
 document.getElementById('account-date-filter').value = todayISO;
 document.getElementById('pur-date').value = todayISO;
+document.getElementById('sh-date').value = todayISO;
+
+// وظائف مسح الفلاتر
+window.clearPatientDateFilter = () => { document.getElementById('patient-date-filter').value = ''; renderPatients(); };
+window.clearPurchaseDateFilter = () => { document.getElementById('purchase-date-filter').value = ''; renderPurchases(); };
+window.clearShortageDateFilter = () => { document.getElementById('shortage-date-filter').value = ''; renderShortages(); };
 
 // ============ AUTH ============
 onAuthStateChanged(auth, user => {
@@ -760,7 +783,7 @@ window.toggleSidebar = () => {
   document.getElementById('sidebar-overlay').classList.toggle('show');
 };
 
-// ============ LOAD ALL ============
+// ============ LOAD ALL DATA ============
 async function loadAll() {
   await loadPatients();
   await loadShortages();
@@ -769,7 +792,7 @@ async function loadAll() {
 
 async function loadPatients() {
   try {
-    const q = query(collection(db,'patients'), orderBy('createdAt','desc'));
+    const q = query(collection(db,'patients'), orderBy('customSortDate','desc'));
     const snap = await getDocs(q);
     window._patients = snap.docs.map(d => ({id:d.id, ...d.data()}));
   } catch(e) { window._patients = []; }
@@ -785,7 +808,7 @@ async function loadShortages() {
 
 async function loadPurchases() {
   try {
-    const q = query(collection(db,'purchases'), orderBy('createdAt','desc'));
+    const q = query(collection(db,'purchases'), orderBy('purchaseDate','desc'));
     const snap = await getDocs(q);
     window._purchases = snap.docs.map(d => ({id:d.id, ...d.data()}));
   } catch(e) { window._purchases = []; }
@@ -807,83 +830,89 @@ window.calcFinance = () => {
   document.getElementById('calc-doctor-remaining').textContent = doctorRemaining.toLocaleString('ar-EG') + ' جنيه';
 };
 
-// ============ AUTOCOMPLETE ============
-window.filterProcedures = () => {
-  const val = document.getElementById('p-procedure').value.toLowerCase();
-  const list = document.getElementById('proc-list');
-  const items = list.querySelectorAll('.autocomplete-item');
-  let any = false;
-  items.forEach(item => {
-    const match = item.textContent.toLowerCase().includes(val) || val === '';
-    item.style.display = match ? 'block' : 'none';
-    if(match) any = true;
-  });
-  list.classList.toggle('show', any && val.length > 0);
-};
-
-window.selectProcedure = (val) => {
-  document.getElementById('p-procedure').value = val;
-  document.getElementById('proc-list').classList.remove('show');
-};
-
-document.addEventListener('click', e => {
-  if(!e.target.closest('.autocomplete-wrap')) document.getElementById('proc-list').classList.remove('show');
-});
-
 // ============ SAVE PATIENT ============
 window.savePatient = async () => {
   const name = document.getElementById('p-name').value.trim();
-  const phone = document.getElementById('p-phone').value.trim();
-  const procedure = document.getElementById('p-procedure').value.trim();
+  const phone = document.getElementById('p-phone').value.trim(); // الهاتف أصبح اختياري
+  const procedure = document.getElementById('p-procedure').value;
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
-  if(!name||!phone||!procedure) { showToast('يرجى تعبئة الاسم والهاتف والإجراء', true); return; }
+  const customDateVal = document.getElementById('p-custom-date').value || todayISO;
+  
+  if(!name || !procedure) { showToast('يرجى تعبئة اسم المريض واختيار الإجراء الطبي', true); return; }
+  
   const remaining = total - paid;
   const doctorShare = total * 0.6;
   const doctorPaid = paid * 0.6;
   const doctorRemaining = doctorShare - doctorPaid;
+  
+  // بناء تاريخ وهمي صحيح لإجراء العمليات الحسابية عليه
+  const dummyDate = new Date(customDateVal);
+  
   try {
     const data = {
       name, phone, procedure, total, paid, remaining,
       doctorShare, doctorPaid, doctorRemaining,
       notes: '', xrays: [],
-      createdAt: serverTimestamp(),
+      customSortDate: customDateVal, // التاريخ المختار (يدعم التواريخ القديمة)
+      createdAt: dummyDate,
       updatedAt: serverTimestamp()
     };
+    
     const docRef = await addDoc(collection(db,'patients'), data);
-    window._patients.unshift({id:docRef.id, ...data, createdAt:{toDate:()=>new Date()}});
+    window._patients.unshift({id:docRef.id, ...data, createdAt:{toDate:()=>dummyDate}});
+    // إعادة فرز الترتيب بالتاريخ الجديد تنازلياً
+    window._patients.sort((a,b) => b.customSortDate.localeCompare(a.customSortDate));
+    
     showToast('✅ تم حفظ المريض بنجاح');
     clearForm();
   } catch(e) { showToast('حدث خطأ أثناء الحفظ', true); }
 };
 
 window.clearForm = () => {
-  ['p-name','p-phone','p-procedure','p-total','p-paid'].forEach(id => document.getElementById(id).value='');
+  ['p-name','p-phone','p-total','p-paid'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('p-procedure').selectedIndex = 0;
+  document.getElementById('p-custom-date').value = todayISO;
   calcFinance();
 };
 
 // ============ RENDER PATIENTS ============
 window.renderPatients = () => {
   const search = (document.getElementById('patient-search').value||'').toLowerCase();
+  const filterDateVal = document.getElementById('patient-date-filter').value;
+  
   let pts = window._patients;
-  if(search) pts = pts.filter(p => p.name.toLowerCase().includes(search) || (p.phone||'').includes(search));
+  
+  // الفلترة بالتاريخ أولاً إذا تم اختياره
+  if(filterDateVal) {
+    pts = pts.filter(p => p.customSortDate === filterDateVal);
+  }
+  
+  // الفلترة بالاسم أو الهاتف
+  if(search) {
+    pts = pts.filter(p => p.name.toLowerCase().includes(search) || (p.phone||'').includes(search));
+  }
+  
   const container = document.getElementById('patients-list');
   if(!pts.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><p>لا يوجد مرضى مسجلين</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><p>لا يوجد مرضى يطابقون خيارات البحث الحالية</p></div>`;
     return;
   }
+  
+  // خانة التاريخ أصبحت في البداية مباشرة بعد الـ #
   container.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>الاسم</th><th>الهاتف</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+    <thead><tr><th>#</th><th>تاريخ الزيارة</th><th>الاسم</th><th>الهاتف</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي الكلي</th><th>متبقي الدكتور</th><th>إجراءات</th></tr></thead>
     <tbody>${pts.map((p,i)=>`
       <tr>
         <td>${i+1}</td>
+        <td><span class="date-badge" style="background:#eff6ff; border-color:#bfdbfe; color:var(--primary);">📅 ${p.customSortDate || formatDateISO(p.createdAt)}</span></td>
         <td><strong style="cursor:pointer;color:var(--primary);" onclick="openPatientModal('${p.id}')">${p.name}</strong></td>
         <td>${p.phone||'-'}</td>
         <td><span class="badge badge-blue">${p.procedure||'-'}</span></td>
         <td>${(p.total||0).toLocaleString('ar-EG')} ج</td>
         <td style="color:var(--success);font-weight:700;">${(p.paid||0).toLocaleString('ar-EG')} ج</td>
         <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${(p.remaining||0).toLocaleString('ar-EG')} ج</span></td>
-        <td><span class="date-badge">📅 ${p.createdAt ? formatDate(p.createdAt) : '-'}</span></td>
+        <td style="color:var(--warning); font-weight:700;">${(p.doctorRemaining||0).toLocaleString('ar-EG')} ج</td>
         <td>
           <div class="actions-row">
             <button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 ملف</button>
@@ -911,7 +940,7 @@ window.openPatientModal = (id) => {
       <div class="info-item"><label>الاسم</label><p>${p.name}</p></div>
       <div class="info-item"><label>الهاتف</label><p>${p.phone||'-'}</p></div>
       <div class="info-item"><label>الإجراء الطبي</label><p>${p.procedure||'-'}</p></div>
-      <div class="info-item"><label>التاريخ</label><p>${p.createdAt?formatDateWithTime(p.createdAt):'-'}</p></div>
+      <div class="info-item"><label>التاريخ المسجل</label><p>${p.customSortDate || formatDate(p.createdAt)}</p></div>
     </div>
     <div class="finance-calc">
       <div class="calc-row"><span class="calc-label">💰 الإجمالي</span><span class="calc-value">${(p.total||0).toLocaleString('ar-EG')} جنيه</span></div>
@@ -922,25 +951,40 @@ window.openPatientModal = (id) => {
       <div class="calc-row"><span class="calc-label">⏳ متبقي حصة الدكتور</span><span class="calc-value red">${(p.doctorRemaining||0).toLocaleString('ar-EG')} جنيه</span></div>
     </div>
 
-    <div class="section-title">📝 تعديل البيانات</div>
+    <div class="section-title">📝 تعديل البيانات والتاريخ القديم</div>
     <div class="form-grid">
-      <div class="field-group"><label>الإجراء الطبي</label><input type="text" id="edit-proc" value="${p.procedure||''}"/></div>
+      <div class="field-group">
+        <label>الإجراء الطبي</label>
+        <select id="edit-proc">
+          <option value="تنظيف جير" ${p.procedure==='تنظيف جير'?'selected':''}>تنظيف جير</option>
+          <option value="حشو عصب" ${p.procedure==='حشو عصب'?'selected':''}>حشو عصب</option>
+          <option value="حشو" ${p.procedure==='حشو'?'selected':''}>حشو</option>
+          <option value="خلع" ${p.procedure==='خلع'?'selected':''}>خلع</option>
+          <option value="خلع جراحي" ${p.procedure==='خلع جراحي'?'selected':''}>خلع جراحي</option>
+          <option value="خلع ضرس عقل" ${p.procedure==='خلع ضرس عقل'?'selected':''}>خلع ضرس عقل</option>
+          <option value="حشو عصب أطفال" ${p.procedure==='حشو عصب أطفال'?'selected':''}>حشو عصب أطفال</option>
+          <option value="طربوش" ${p.procedure==='طربوش'?'selected':''}>طربوش</option>
+          <option value="تركيبة" ${p.procedure==='تركيبة'?'selected':''}>تركيبة</option>
+          <option value="تقويم" ${p.procedure==='تقويم'?'selected':''}>تقويم</option>
+          <option value="تبييض" ${p.procedure==='تبييض'?'selected':''}>تبييض</option>
+        </select>
+      </div>
+      <div class="field-group"><label>تاريخ المعاملة</label><input type="date" id="edit-date" value="${p.customSortDate || todayISO}"/></div>
       <div class="field-group"><label>الإجمالي</label><input type="number" id="edit-total" value="${p.total||0}" oninput="calcEditFinance()"/></div>
       <div class="field-group"><label>المدفوع</label><input type="number" id="edit-paid" value="${p.paid||0}" oninput="calcEditFinance()"/></div>
-      <div class="field-group"><label>الهاتف</label><input type="text" id="edit-phone" value="${p.phone||''}"/></div>
+      <div class="field-group full"><label>الهاتف</label><input type="text" id="edit-phone" value="${p.phone||''}"/></div>
     </div>
     <div class="finance-calc" id="edit-finance-calc" style="margin-top:12px;"></div>
     <button class="btn btn-success" style="margin-top:12px;" onclick="updatePatient('${id}')">💾 حفظ التعديلات</button>
 
-    <div class="section-title">📝 ملاحظات</div>
+    <div class="section-title">📝 ملاحظات المريض</div>
     <textarea class="notes-area" id="edit-notes" placeholder="اكتب ملاحظاتك هنا...">${p.notes||''}</textarea>
     <button class="btn btn-edit" style="margin-top:8px;" onclick="saveNotes('${id}')">💾 حفظ الملاحظات</button>
 
     <div class="section-title">🩻 صور الأشعة</div>
     <div class="img-upload-area" onclick="document.getElementById('xray-upload').click()">
       <input type="file" id="xray-upload" accept="image/*" multiple onchange="uploadXrays('${id}', this)"/>
-      <div>📁 اضغط لرفع صور الأشعة</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">JPG, PNG مقبولة</div>
+      <div>📁 اضغط لرفع صور الأشعة للملف</div>
     </div>
     <div class="xray-grid">${xraysHtml}</div>
   `;
@@ -960,12 +1004,15 @@ window.calcEditFinance = () => {
     <div class="calc-row"><span class="calc-label">المتبقي الكلي</span><span class="calc-value red">${remaining.toLocaleString('ar-EG')} جنيه</span></div>
     <div class="calc-row"><span class="calc-label">حصة الدكتور من الإجمالي</span><span class="calc-value orange">${doctor.toLocaleString('ar-EG')} جنيه</span></div>
     <div class="calc-row"><span class="calc-label">المستلم الفعلي للدكتور حالياً</span><span class="calc-value blue">${doctorEarned.toLocaleString('ar-EG')} جنيه</span></div>
-    <div class="calc-row"><span class="calc-label">متبقي الدكتور</span><span class="calc-value red">${doctorRemaining.toLocaleString('ar-EG')} جنيه</span></div>`;
+    <div class="calc-row"><span class="calc-label">متبقي مستحق للدكتور</span><span class="calc-value red">${doctorRemaining.toLocaleString('ar-EG')} جنيه</span></div>`;
 };
 
 window.updatePatient = async (id) => {
   const total = parseFloat(document.getElementById('edit-total').value)||0;
   const paid = parseFloat(document.getElementById('edit-paid').value)||0;
+  const cDate = document.getElementById('edit-date').value || todayISO;
+  
+  const dummyDate = new Date(cDate);
   const data = {
     procedure: document.getElementById('edit-proc').value,
     phone: document.getElementById('edit-phone').value,
@@ -974,14 +1021,21 @@ window.updatePatient = async (id) => {
     doctorShare: total * 0.6,
     doctorPaid: paid * 0.6,
     doctorRemaining: (total * 0.6) - (paid * 0.6),
+    customSortDate: cDate,
+    createdAt: dummyDate,
     updatedAt: serverTimestamp()
   };
   try {
     await updateDoc(doc(db,'patients',id), data);
     const idx = window._patients.findIndex(p=>p.id===id);
-    if(idx>=0) window._patients[idx] = {...window._patients[idx], ...data};
-    showToast('✅ تم تحديث البيانات');
+    if(idx>=0) window._patients[idx] = {...window._patients[idx], ...data, createdAt:{toDate:()=>dummyDate}};
+    
+    // إعادة ترتيب البيانات بعد تحديث التاريخ
+    window._patients.sort((a,b) => b.customSortDate.localeCompare(a.customSortDate));
+    
+    showToast('✅ تم تحديث بيانات وتاريخ المريض');
     closeModal();
+    if(document.getElementById('page-patients').classList.contains('active')) renderPatients();
     if(document.getElementById('page-accounts').classList.contains('active')) renderAccounts();
   } catch(e) { showToast('حدث خطأ', true); }
 };
@@ -1001,7 +1055,7 @@ window.deletePatient = async (id) => {
   try {
     await deleteDoc(doc(db,'patients',id));
     window._patients = window._patients.filter(p=>p.id!==id);
-    renderPatients();
+    if(document.getElementById('page-patients').classList.contains('active')) renderPatients();
     if(document.getElementById('page-accounts').classList.contains('active')) renderAccounts();
     showToast('🗑️ تم حذف المريض');
   } catch(e) { showToast('حدث خطأ', true); }
@@ -1052,24 +1106,18 @@ window.deleteXray = async (patientId, xrayIndex) => {
   } catch(e) { showToast('حدث خطأ', true); }
 };
 
-// ============ ACCOUNTS (TODAY + MONTHLY) ============
+// ============ ACCOUNTS (TODAY + MONTHLY REPOST AT BOTTOM) ============
 window.renderAccounts = () => {
   const pts = window._patients;
   const filterDateVal = document.getElementById('account-date-filter').value;
   
-  // تحديث عنوان إحصائيات اليوم المحدد بصيغة عربية
   if(filterDateVal) {
     const dObj = new Date(filterDateVal);
     document.getElementById('accounts-day-title').textContent = `📊 إحصائيات وعمليات يوم: ${dObj.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'})}`;
   }
 
-  // 1. حسابات اليوم المحدد فقط لبطاقات الإحصائيات وجدول اليوم
-  const dayPatients = pts.filter(p => {
-    if (!p.createdAt) return false;
-    const pDate = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
-    const pDateStr = pDate.toISOString().split('T')[0];
-    return pDateStr === filterDateVal;
-  });
+  // 1. تصفية حسابات اليوم المحدد بناءً على تاريخ الإدخال المخصص
+  const dayPatients = pts.filter(p => p.customSortDate === filterDateVal);
 
   const dayRevenue = dayPatients.reduce((s,p)=>s+(p.total||0),0);
   const dayPaid = dayPatients.reduce((s,p)=>s+(p.paid||0),0);
@@ -1096,34 +1144,55 @@ window.renderAccounts = () => {
       <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${(p.remaining||0).toLocaleString('ar-EG')} ج</span></td>
       <td style="color:var(--primary);font-weight:700">${((p.paid||0)*0.6).toLocaleString('ar-EG')} ج</td>
       <td style="color:var(--warning);font-weight:700">${(p.doctorRemaining||0).toLocaleString('ar-EG')} ج</td>
-      <td><button class="btn btn-edit btn-sm" onclick="openPayModal('${p.id}')">💳 دفع</button></td>
+      <td><button class="btn btn-edit btn-sm" onclick="openPayModal('${p.id}')">💳 دفع/تحصيل</button></td>
     </tr>`).join('')}</tbody></table>`
   : '<div class="empty-state"><div class="empty-icon">📅</div><p>لا توجد أي معاملات أو مرضى مسجلين في هذا اليوم</p></div>';
 
+  // 2. جدول المديونيات الثابت (لكل الأوقات)
+  const debtors = pts.filter(p=>(p.remaining||0)>0);
+  document.getElementById('debtors-table').innerHTML = debtors.length ? `<table>
+    <thead><tr><th>#</th><th>المريض</th><th>الهاتف</th><th>المتبقي الكلي للمحل</th><th>متبقي مستحق للدكتور</th><th>تاريخ المعاملة الأصلية</th><th>إجراء</th></tr></thead>
+    <tbody>${debtors.map((p,i)=>`<tr>
+      <td>${i+1}</td>
+      <td><strong style="color:var(--danger)">${p.name}</strong></td>
+      <td>${p.phone||'-'}</td>
+      <td style="color:var(--danger);font-weight:700">${(p.remaining||0).toLocaleString('ar-EG')} جنيه</td>
+      <td style="color:var(--warning);font-weight:700">${(p.doctorRemaining||0).toLocaleString('ar-EG')} جنيه</td>
+      <td><span class="date-badge">📅 ${p.customSortDate || formatDate(p.createdAt)}</span></td>
+      <td><button class="btn btn-success btn-sm" onclick="openPayModal('${p.id}')">💳 تسجيل كاش</button></td>
+    </tr>`).join('')}</tbody></table>`
+  : '<div class="empty-state"><div class="empty-icon">🎉</div><p>ممتاز! لا يوجد أي مرضى متبقي عليهم مبالغ متأخرة</p></div>';
 
-  // 2. تجميع التقارير الشهرية تلقائياً (لكل الأوقات) ليعرض مايو، يونيو، إلخ.
+  // 3. تجميع التقارير الشهرية تلقائياً (موجودة بالأسفل حالياً)
   const monthlyData = {};
   pts.forEach(p => {
-    if (!p.createdAt) return;
-    const pDate = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
-    // الحصول على مفتاح الشهر والسنة مثل "2026-05" لفرز دقيق، وعرضه باسم الشهر العربي
-    const monthKey = pDate.toLocaleString('ar-EG', { year: 'numeric', month: 'long' });
-    
-    if(!monthlyData[monthKey]) {
-      monthlyData[monthKey] = { total: 0, paid: 0, remaining: 0, docEarned: 0, docRemaining: 0 };
+    let mKey = "غير محدد";
+    if (p.customSortDate) {
+      const parts = p.customSortDate.split('-'); // ["2026", "05", "19"]
+      const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
+      mKey = dObj.toLocaleString('ar-EG', { year: 'numeric', month: 'long' });
+    } else if (p.createdAt) {
+      const pDate = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+      mKey = pDate.toLocaleString('ar-EG', { year: 'numeric', month: 'long' });
     }
-    monthlyData[monthKey].total += (p.total || 0);
-    monthlyData[monthKey].paid += (p.paid || 0);
-    monthlyData[monthKey].remaining += (p.remaining || 0);
-    monthlyData[monthKey].docEarned += ((p.paid || 0) * 0.6);
-    monthlyData[monthKey].docRemaining += (p.doctorRemaining || 0);
+    
+    if(!monthlyData[monthKey] && mKey !== "غير محدد") {
+      monthlyData[mKey] = { total: 0, paid: 0, remaining: 0, docEarned: 0, docRemaining: 0 };
+    }
+    if(monthlyData[mKey]) {
+      monthlyData[mKey].total += (p.total || 0);
+      monthlyData[mKey].paid += (p.paid || 0);
+      monthlyData[mKey].remaining += (p.remaining || 0);
+      monthlyData[mKey].docEarned += ((p.paid || 0) * 0.6);
+      monthlyData[mKey].docRemaining += (p.doctorRemaining || 0);
+    }
   });
 
   const monthKeys = Object.keys(monthlyData);
   document.getElementById('monthly-report-table').innerHTML = monthKeys.length ? `<table>
     <thead>
       <tr>
-        <th>الشهر</th>
+        <th>الشهر الأسواني / السنوي</th>
         <th>المبلغ الكلي المطلوب</th>
         <th>إجمالي الكاش المحصل</th>
         <th>إجمالي متبقي المرضى</th>
@@ -1137,29 +1206,13 @@ window.renderAccounts = () => {
           <td><strong>${mKey}</strong></td>
           <td style="font-weight:700;">${monthlyData[mKey].total.toLocaleString('ar-EG')} ج</td>
           <td style="color:var(--success); font-weight:700;">${monthlyData[mKey].paid.toLocaleString('ar-EG')} ج</td>
-          <td style="color:var(--danger); font-weight:700;">${monthlyData[mKey].remaining.toLocaleString('ar-EG')} TIM ج</td>
+          <td style="color:var(--danger); font-weight:700;">${monthlyData[mKey].remaining.toLocaleString('ar-EG')} ج</td>
           <td style="color:var(--primary); font-weight:700;">${monthlyData[mKey].docEarned.toLocaleString('ar-EG')} ج</td>
           <td style="color:var(--warning); font-weight:700;">${monthlyData[mKey].docRemaining.toLocaleString('ar-EG')} ج</td>
         </tr>
       `).join('')}
     </tbody>
   </table>` : '<div class="empty-state"><p>لا توجد بيانات شهرية كافية بعد</p></div>';
-
-
-  // 3. جدول المديونيات والمتأخرات الثابت (لكل الأوقات) معدل بالخانات الجديدة
-  const debtors = pts.filter(p=>(p.remaining||0)>0);
-  document.getElementById('debtors-table').innerHTML = debtors.length ? `<table>
-    <thead><tr><th>#</th><th>المريض</th><th>الهاتف</th><th>المتبقي الكلي للمحل</th><th>متبقي مستحق للدكتور</th><th>تاريخ التسجيل</th><th>إجراء</th></tr></thead>
-    <tbody>${debtors.map((p,i)=>`<tr>
-      <td>${i+1}</td>
-      <td><strong style="color:var(--danger)">${p.name}</strong></td>
-      <td>${p.phone||'-'}</td>
-      <td style="color:var(--danger);font-weight:700">${(p.remaining||0).toLocaleString('ar-EG')} جنيه</td>
-      <td style="color:var(--warning);font-weight:700">${(p.doctorRemaining||0).toLocaleString('ar-EG')} جنيه</td>
-      <td><span class="date-badge">📅 ${p.createdAt?formatDate(p.createdAt):'-'}</span></td>
-      <td><button class="btn btn-success btn-sm" onclick="openPayModal('${p.id}')">💳 تسجيل دفع</button></td>
-    </tr>`).join('')}</tbody></table>`
-  : '<div class="empty-state"><div class="empty-icon">🎉</div><p>ممتاز! لا يوجد أي مرضى متبقي عليهم مبالغ متأخرة</p></div>';
 };
 
 window.openPayModal = (id) => {
@@ -1182,41 +1235,35 @@ window.openPayModal = (id) => {
       window._patients[idx].doctorPaid = newPaid * 0.6;
       window._patients[idx].doctorRemaining = (p.total * 0.6) - (newPaid * 0.6);
     }
-    showToast('✅ تم تسجيل الدفع وتحديث نسب وحسابات الطبيب');
+    showToast('✅ تم تسجيل الدفع وتحديث الحسابات ونسب الطبيب');
     renderAccounts();
   }).catch(()=>showToast('حدث خطأ',true));
 };
 
-// ============ PURCHASES (AUTO-CALCULATE + DATE) ============
+// ============ PURCHASES (AUTO-CALCULATE + DATE FILTER) ============
 window.calcPurchaseTotal = () => {
   const unitPrice = parseFloat(document.getElementById('pur-unit-price').value) || 0;
   const qty = parseFloat(document.getElementById('pur-qty').value) || 1;
-  const totalPriceInput = document.getElementById('pur-price');
-  totalPriceInput.value = unitPrice * qty;
+  document.getElementById('pur-price').value = unitPrice * qty;
 };
 
 window.addPurchase = async () => {
   const name = document.getElementById('pur-name').value.trim();
   const unitPrice = parseFloat(document.getElementById('pur-unit-price').value) || 0;
   const qty = parseFloat(document.getElementById('pur-qty').value) || 1;
-  const price = unitPrice * qty; // المبلغ الكلي التلقائي
+  const price = unitPrice * qty;
   const pDate = document.getElementById('pur-date').value;
   const note = document.getElementById('pur-note').value.trim();
   
-  if(!name || unitPrice <= 0 || !pDate) { showToast('يرجى إدخال البيانات المكتوبة بشكل صحيح وتحديد التاريخ', true); return; }
+  if(!name || unitPrice <= 0 || !pDate) { showToast('يرجى إدخال البيانات المطلوبة وتحديد تاريخ الشراء', true); return; }
   
   try {
-    const data = { 
-      name, 
-      unitPrice,
-      qty: qty + " قطعة", 
-      price, 
-      purchaseDate: pDate,
-      note, 
-      createdAt: serverTimestamp() 
-    };
+    const data = { name, unitPrice, qty: qty + " قطعة", price, purchaseDate: pDate, note, createdAt: serverTimestamp() };
     const docRef = await addDoc(collection(db, 'purchases'), data);
     window._purchases.unshift({ id: docRef.id, ...data, createdAt: { toDate: () => new Date() } });
+    
+    // إعادة فرز المشتريات بحسب التاريخ المختار
+    window._purchases.sort((a,b) => b.purchaseDate.localeCompare(a.purchaseDate));
     
     document.getElementById('pur-name').value = '';
     document.getElementById('pur-unit-price').value = '';
@@ -1225,83 +1272,102 @@ window.addPurchase = async () => {
     document.getElementById('pur-note').value = '';
     
     renderPurchases();
-    showToast('✅ تم إضافة بند المصاريف والمشتريات بنجاح');
-  } catch(e) { showToast('حدث خطأ أثناء إضافة المشتريات', true); }
+    showToast('✅ تم إضافة بند المصاريف بنجاح');
+  } catch(e) { showToast('حدث خطأ أثناء الإضافة', true); }
 };
 
 window.renderPurchases = () => {
   const container = document.getElementById('purchases-list');
   const summaryContainer = document.getElementById('purchases-summary');
+  const filterDateVal = document.getElementById('purchase-date-filter').value;
   
-  const totalSpent = window._purchases.reduce((s, p) => s + (p.price || 0), 0);
-  summaryContainer.textContent = `🛒 إجمالي المصاريف والمشتريات العام: ${totalSpent.toLocaleString('ar-EG')} جنيه مصري`;
+  let currentPurchases = window._purchases;
+  if (filterDateVal) {
+    currentPurchases = currentPurchases.filter(p => p.purchaseDate === filterDateVal);
+  }
   
-  if(!window._purchases.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🛍️</div><p>لا يوجد مشتريات مسجلة حتى الآن</p></div>';
+  const totalSpent = currentPurchases.reduce((s, p) => s + (p.price || 0), 0);
+  summaryContainer.textContent = filterDateVal 
+    ? `🛒 إجمالي المصاريف والمشتريات ليوم (${filterDateVal}): ${totalSpent.toLocaleString('ar-EG')} جنيه مصري`
+    : `🛒 إجمالي المصاريف والمشتريات العام (كل الأوقات): ${totalSpent.toLocaleString('ar-EG')} جنيه مصري`;
+  
+  if(!currentPurchases.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🛍️</div><p>لا يوجد مشتريات مسجلة في هذا التاريخ</p></div>';
     return;
   }
   
   container.innerHTML = `<div class="table-wrap"><table>
     <thead><tr><th>#</th><th>العنصر / البيان</th><th>سعر القطعة</th><th>الكمية</th><th>المبلغ الإجمالي الكلي</th><th>تاريخ الشراء</th><th>ملاحظات</th><th>إجراءات</th></tr></thead>
-    <tbody>${window._purchases.map((p, i) => {
-      // عرض تاريخ الشراء المختار يدوياً، وإذا لم يتوفر يعرض تاريخ الإنشاء بالسيرفر
-      let displayDate = p.purchaseDate || (p.createdAt ? formatDate(p.createdAt) : '-');
-      return `<tr>
+    <tbody>${currentPurchases.map((p, i) => `<tr>
         <td>${i+1}</td>
         <td><strong>${p.name}</strong></td>
         <td>${(p.unitPrice || p.price || 0).toLocaleString('ar-EG')} ج</td>
         <td><span class="badge badge-blue">${p.qty || '1 قطعة'}</span></td>
         <td style="color:var(--danger); font-weight:700;">${(p.price||0).toLocaleString('ar-EG')} ج</td>
-        <td><span class="date-badge">📅 ${displayDate}</span></td>
+        <td><span class="date-badge">📅 ${p.purchaseDate || formatDateISO(p.createdAt)}</span></td>
         <td>${p.note || '-'}</td>
         <td><button class="btn btn-danger btn-sm" onclick="deletePurchase('${p.id}')">🗑️</button></td>
-      </tr>`}).join('')}</tbody></table></div>`;
+      </tr>`).join('')}</tbody></table></div>`;
 };
 
 window.deletePurchase = async (id) => {
-  if(!confirm('هل تريد حذف مادة الشراء هذه نهائياً من السجلات؟')) return;
+  if(!confirm('هل تريد حذف بند المشتريات هذا؟')) return;
   try {
     await deleteDoc(doc(db, 'purchases', id));
     window._purchases = window._purchases.filter(p => p.id !== id);
     renderPurchases();
     showToast('🗑️ تم حذف بند المشتريات');
-  } catch(e) { showToast('حدث خطأ أثناء الحذف', true); }
+  } catch(e) { showToast('حدث خطأ', true); }
 };
 
-// ============ SHORTAGE ============
+// ============ SHORTAGE (WITH DATE FILTER) ============
 window.addShortage = async () => {
   const name = document.getElementById('sh-name').value.trim();
   const qty = document.getElementById('sh-qty').value.trim();
+  const sDate = document.getElementById('sh-date').value || todayISO;
   const note = document.getElementById('sh-note').value.trim();
-  if(!name) { showToast('أدخل اسم العنصر', true); return; }
+  
+  if(!name) { showToast('أدخل اسم العنصر الناقص', true); return; }
+  
   try {
-    const data = { name, qty, note, done: false, createdAt: serverTimestamp() };
+    const data = { name, qty, shortageDate: sDate, note, done: false, createdAt: serverTimestamp() };
     const docRef = await addDoc(collection(db,'shortages'), data);
-    window._shortages.unshift({id:docRef.id, ...data, createdAt:{toDate:()=>new Date()}});
+    window._shortages.unshift({id:docRef.id, ...data, createdAt:{toDate:()=>new Date(sDate)}});
+    
     document.getElementById('sh-name').value='';
     document.getElementById('sh-qty').value='';
     document.getElementById('sh-note').value='';
+    document.getElementById('sh-date').value=todayISO;
+    
     renderShortages();
-    showToast('✅ تمت الإضافة');
+    showToast('✅ تمت الإضافة لقائمة النواقص');
   } catch(e) { showToast('حدث خطأ', true); }
 };
 
 window.renderShortages = () => {
   const container = document.getElementById('shortage-list');
-  if(!window._shortages.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><p>القائمة فارغة</p></div>';
+  const filterDateVal = document.getElementById('shortage-date-filter').value;
+  
+  let currentShortages = window._shortages;
+  if(filterDateVal) {
+    currentShortages = currentShortages.filter(s => s.shortageDate === filterDateVal);
+  }
+  
+  if(!currentShortages.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><p>لا توجد عناصر مسجلة في هذا النطاق</p></div>';
     return;
   }
-  container.innerHTML = window._shortages.map(s=>`
+  
+  container.innerHTML = currentShortages.map(s=>`
     <div class="shortage-item" id="sh-${s.id}" style="${s.done?'opacity:0.5;text-decoration:line-through':''}">
       <div>
         <div class="item-name">${s.name}</div>
-        ${s.qty?`<div style="font-size:12px;color:var(--text-muted)">الكمية: ${s.qty}</div>`:''}
-        ${s.note?`<div style="font-size:12px;color:var(--text-muted)">${s.note}</div>`:''}
-        <span class="date-badge" style="margin-top:4px;">📅 ${s.createdAt?formatDate(s.createdAt):''}</span>
+        ${s.qty?`<div style="font-size:12px;color:var(--text-muted)">الكمية المطلوبة: ${s.qty}</div>`:''}
+        ${s.note?`<div style="font-size:12px;color:var(--text-muted)">ملحوظة: ${s.note}</div>`:''}
+        <span class="date-badge" style="margin-top:4px; background:#fef3c7; color:var(--warning);">📅 التاريخ: ${s.shortageDate || formatDateISO(s.createdAt)}</span>
       </div>
       <div class="actions-row">
-        <button class="btn btn-sm ${s.done?'btn-warning':'btn-success'}" onclick="toggleShortage('${s.id}',${!s.done})">${s.done?'↩️ إلغاء':'✅ تم'}</button>
+        <button class="btn btn-sm ${s.done?'btn-warning':'btn-success'}" onclick="toggleShortage('${s.id}',${!s.done})">${s.done?'↩️ إلغاء':'✅ تم الشراء'}</button>
         <button class="btn btn-danger btn-sm" onclick="deleteShortage('${s.id}')">🗑️</button>
       </div>
     </div>`).join('');
@@ -1322,7 +1388,7 @@ window.deleteShortage = async (id) => {
     await deleteDoc(doc(db,'shortages',id));
     window._shortages = window._shortages.filter(s=>s.id!==id);
     renderShortages();
-    showToast('🗑️ تم الحذف');
+    showToast('🗑️ تم الحذف من النواقص');
   } catch(e) {}
 };
 
