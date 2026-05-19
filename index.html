@@ -75,6 +75,21 @@
 
   /* APP LAYOUT */
   #app { display:none; min-height:100vh; }
+  
+  /* Mobile Top Bar */
+  .mobile-navbar {
+    display: none; background: var(--primary); color: white; padding: 12px 16px;
+    align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0;
+    z-index: 99; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  .mobile-navbar .brand { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .mobile-menu-btn {
+    width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 10px;
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 20px; transition: background 0.2s;
+  }
+  .mobile-menu-btn:hover { background: rgba(255,255,255,0.25); }
+
   .sidebar {
     position:fixed; top:0; right:0; width:var(--sidebar-w); height:100vh;
     background:linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
@@ -241,14 +256,14 @@
   }
 
   /* STATS */
-  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:24px; }
   .stat-card {
     background:white; border-radius:14px; padding:20px; border:1px solid var(--border);
-    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    box-shadow:0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;
   }
   .stat-icon { font-size:28px; margin-bottom:8px; }
-  .stat-value { font-size:24px; font-weight:800; color:var(--text); }
-  .stat-label { font-size:12px; color:var(--text-muted); font-weight:600; margin-top:4px; }
+  .stat-value { font-size:24px; font-weight:800; color:var(--text); line-height: 1.2; }
+  .stat-label { font-size:12px; color:var(--text-muted); font-weight:600; margin-top:6px; }
 
   /* SHORTAGE */
   .shortage-item {
@@ -274,22 +289,20 @@
     padding:3px 10px; border-radius:20px; font-size:11px; color:var(--text-muted); font-weight:600;
   }
 
-  /* Responsive */
+  /* Responsive styling */
   @media(max-width:768px) {
+    .mobile-navbar { display: flex; }
     .sidebar { transform:translateX(100%); transition:transform 0.3s; }
     .sidebar.open { transform:translateX(0); }
-    .main-content { margin-right:0; padding:16px; }
-    .stats-grid { grid-template-columns:1fr 1fr; }
+    .main-content { margin-right:0; padding:16px; padding-top: 76px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
     .form-grid { grid-template-columns:1fr; }
     .patient-info-grid { grid-template-columns:1fr; }
-    .mobile-menu-btn { display:flex !important; }
   }
-  .mobile-menu-btn {
-    display:none; position:fixed; top:16px; right:16px; z-index:99;
-    width:44px; height:44px; background:var(--primary); border-radius:12px;
-    border:none; cursor:pointer; align-items:center; justify-content:center;
-    color:white; font-size:20px; box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  @media(max-width:480px) {
+    .stats-grid { grid-template-columns: 1fr; }
   }
+
   .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
   .sidebar-overlay.show { display:block; }
 
@@ -299,7 +312,7 @@
   .empty-state p { font-size:14px; }
 
   .search-input {
-    padding:10px 16px 10px 16px; border:2px solid var(--border); border-radius:10px;
+    padding:10px 16px; border:2px solid var(--border); border-radius:10px;
     font-family:'Cairo',sans-serif; font-size:14px; outline:none; width:260px; transition:border 0.2s;
   }
   .search-input:focus { border-color:var(--primary); }
@@ -352,7 +365,11 @@
 </div>
 
 <div id="app">
-  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+  <div class="mobile-navbar">
+    <div class="brand">🦷 عيادة زمزم</div>
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+  </div>
+  
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <div class="sidebar" id="sidebar">
@@ -494,7 +511,7 @@
       <div class="page-header">
         <div>
           <h2>💰 الحسابات</h2>
-          <p>إجمالي المدفوعات والمديونيات ونسب الطبيب من المحصل</p>
+          <p>متابعة المبالغ الكلية، التحصيلات النقدية، ونسب الطبيب المستلمة والمتبقية</p>
         </div>
       </div>
       <div class="stats-grid" id="account-stats"></div>
@@ -698,6 +715,7 @@ window.showPage = (page) => {
   if(page==='accounts') renderAccounts();
   if(page==='purchases') renderPurchases();
   if(page==='shortage') renderShortages();
+  
   // close mobile sidebar
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('show');
@@ -745,7 +763,7 @@ window.calcFinance = () => {
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
   const remaining = total - paid;
   const doctor = total * 0.6;
-  const doctorEarned = paid * 0.6; // نسبة الدكتور الفعلية من المدفوع
+  const doctorEarned = paid * 0.6; 
   const doctorRemaining = doctor - doctorEarned;
   document.getElementById('calc-total').textContent = total.toLocaleString('ar-EG') + ' جنيه';
   document.getElementById('calc-paid').textContent = paid.toLocaleString('ar-EG') + ' جنيه';
@@ -1005,14 +1023,15 @@ window.renderAccounts = () => {
   const totalPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
   const totalRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
   const totalDoctorShare = pts.reduce((s,p)=>s+(p.doctorShare||0),0);
-  const totalDoctorEarned = pts.reduce((s,p)=>s+((p.paid||0)*0.6),0); // إجمالي ما استلمه الطبيب فعلياً من المدفوعات
+  const totalDoctorEarned = pts.reduce((s,p)=>s+((p.paid||0)*0.6),0); 
+  const totalDoctorRemaining = pts.reduce((s,p)=>s+(p.doctorRemaining||0),0); // متبقي الطبيب من فلوس الناس
 
   document.getElementById('account-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${totalRevenue.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي الإيرادات (جنيه)</div></div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${totalRevenue.toLocaleString('ar-EG')}</div><div class="stat-label">المبلغ الكلي المطلوب (جنيه)</div></div>
     <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--success)">${totalPaid.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي الكاش المحصّل (جنيه)</div></div>
     <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${totalRemaining.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي المتبقي بطرف المرضى</div></div>
     <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--primary)">${totalDoctorEarned.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي ما استلمه الدكتور فعلياً (60% من المدفوع)</div></div>
-    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--warning)">${totalDoctorShare.toLocaleString('ar-EG')}</div><div class="stat-label">مستهدف حصة الدكتور الكلية</div></div>`;
+    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--warning)">${totalDoctorRemaining.toLocaleString('ar-EG')}</div><div class="stat-label">متبقي مستحق للدكتور (60% من فلوس الناس)</div></div>`;
 
   document.getElementById('accounts-table').innerHTML = pts.length ? `<table>
     <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>مستلم الدكتور (60%)</th><th>التاريخ</th><th></th></tr></thead>
