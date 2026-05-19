@@ -140,13 +140,13 @@
   .page.active { display:block; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
-  .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+  .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; gap: 16px; flex-wrap: wrap; }
   .page-header h2 { font-size:24px; font-weight:800; color:var(--text); }
   .page-header p { color:var(--text-muted); font-size:13px; margin-top:2px; }
 
   /* CARDS */
   .card {
-    background:white; border-radius:16px; padding:24px;
+    background:white; border-radius:16px; padding:24px; margin-bottom:24px;
     box-shadow:0 2px 12px rgba(0,0,0,0.06); border:1px solid var(--border);
   }
   .card-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:8px; }
@@ -256,13 +256,13 @@
   }
 
   /* STATS */
-  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:24px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px; }
   .stat-card {
     background:white; border-radius:14px; padding:20px; border:1px solid var(--border);
     box-shadow:0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;
   }
   .stat-icon { font-size:28px; margin-bottom:8px; }
-  .stat-value { font-size:24px; font-weight:800; color:var(--text); line-height: 1.2; }
+  .stat-value { font-size:22px; font-weight:800; color:var(--text); line-height: 1.2; }
   .stat-label { font-size:12px; color:var(--text-muted); font-weight:600; margin-top:6px; }
 
   /* SHORTAGE */
@@ -286,8 +286,11 @@
   /* DATE */
   .date-badge {
     display:inline-flex; align-items:center; gap:5px; background:var(--bg);
-    padding:3px 10px; border-radius:20px; font-size:11px; color:var(--text-muted); font-weight:600;
+    padding:6px 14px; border-radius:20px; font-size:13px; color:var(--text); font-weight:700; border:1px solid var(--border);
   }
+  .date-filter-wrap { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 12px; border: 2px solid var(--border); }
+  .date-filter-wrap label { font-size: 13px; font-weight: 700; color: var(--primary); }
+  .date-filter-wrap input { border: none; outline: none; font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
 
   /* Responsive styling */
   @media(max-width:768px) {
@@ -510,17 +513,29 @@
     <div class="page" id="page-accounts">
       <div class="page-header">
         <div>
-          <h2>💰 الحسابات</h2>
-          <p>متابعة المبالغ الكلية، التحصيلات النقدية، ونسب الطبيب المستلمة والمتبقية</p>
+          <h2>💰 الحسابات اليومية والشهرية</h2>
+          <p>متابعة المبالغ الكلية والتحصيلات، ونسب ومتبقي الطبيب</p>
+        </div>
+        <div class="date-filter-wrap">
+          <label for="account-date-filter">📅 عرض حسابات يوم:</label>
+          <input type="date" id="account-date-filter" onchange="renderAccounts()"/>
         </div>
       </div>
+      
+      <h3 style="margin-bottom:12px; font-weight:800; color:var(--primary);" id="accounts-day-title">📊 إحصائيات اليوم المحدد</h3>
       <div class="stats-grid" id="account-stats"></div>
-      <div class="card" style="margin-bottom:20px;">
-        <div class="card-title">📊 جميع المرضى والمدفوعات</div>
+
+      <div class="card">
+        <div class="card-title">📅 تقرير الإجماليات الشهرية (ملخص كل شهر)</div>
+        <div class="table-wrap" id="monthly-report-table"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 تفاصيل مرضى ومدفوعات اليوم المحدد</div>
         <div class="table-wrap" id="accounts-table"></div>
       </div>
       <div class="card">
-        <div class="card-title">⚠️ المرضى عليهم مبالغ متأخرة</div>
+        <div class="card-title">⚠️ إجمالي المرضى الذين لديهم مبالغ متأخرة (كل الأوقات)</div>
         <div class="table-wrap" id="debtors-table"></div>
       </div>
     </div>
@@ -529,10 +544,10 @@
       <div class="page-header">
         <div>
           <h2>🛍️ المشتريات والمصاريف</h2>
-          <p>تسجيل ومتابعة المواد والمستلزمات التي تم شراؤها</p>
+          <p>تسجيل ومتابعة المواد والمستلزمات ومصاريف العيادة</p>
         </div>
       </div>
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card">
         <div class="card-title">➕ تسجيل شراء مستلزمات جديدة</div>
         <div class="form-grid">
           <div class="field-group">
@@ -540,19 +555,27 @@
             <input type="text" id="pur-name" placeholder="مثال: علبة كمامات، بنج البوتاسيوم..."/>
           </div>
           <div class="field-group">
-            <label>السعر المدفوع (جنيه) *</label>
-            <input type="number" id="pur-price" placeholder="0"/>
+            <label>سعر القطعة الواحد (جنيه) *</label>
+            <input type="number" id="pur-unit-price" placeholder="0" oninput="calcPurchaseTotal()"/>
           </div>
           <div class="field-group">
-            <label>الكمية</label>
-            <input type="text" id="pur-qty" placeholder="مثال: 5 علب، 2 جهاز..."/>
+            <label>العدد / الكمية الكلية *</label>
+            <input type="number" id="pur-qty" value="1" min="1" placeholder="1" oninput="calcPurchaseTotal()"/>
           </div>
           <div class="field-group">
+            <label>المبلغ الإجمالي الكلي (يحسب تلقائياً)</label>
+            <input type="number" id="pur-price" placeholder="0" readonly style="background:#f1f5f9; font-weight:700; color:var(--danger);"/>
+          </div>
+          <div class="field-group">
+            <label>تاريخ الشراء *</label>
+            <input type="date" id="pur-date"/>
+          </div>
+          <div class="field-group full">
             <label>ملاحظات</label>
             <input type="text" id="pur-note" placeholder="أي تفاصيل أخرى كالمورد أو مكان الشراء"/>
           </div>
         </div>
-        <button class="btn btn-success" style="margin-top:12px;" onclick="addPurchase()">➕ إضافة للمشتريات</button>
+        <button class="btn btn-success" style="margin-top:16px;" onclick="addPurchase()">➕ إضافة للمشتريات</button>
       </div>
       <div class="card">
         <div class="card-title">🧾 سجل المشتريات والمصاريف الكلي</div>
@@ -568,7 +591,7 @@
           <p>المستلزمات الناقصة في العيادة</p>
         </div>
       </div>
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card">
         <div class="card-title">➕ إضافة عنصر جديد</div>
         <div class="form-grid">
           <div class="field-group">
@@ -635,13 +658,24 @@ window._shortages = [];
 window._purchases = [];
 window._editingPatientId = null;
 
-// ============ DATE ============
+// ============ DATE SETTINGS ============
 function formatDate(ts) {
   if (!ts) return '';
   const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric', hour:'2-digit', minute:'2-digit'});
+  return d.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 }
+
+function formatDateWithTime(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('ar-EG', {year:'numeric',month:'short',day:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+
+// تهيئة التواريخ الافتراضية للنموذج والفلتر باليوم الحالي للعيادة
+const todayISO = new Date().toISOString().split('T')[0];
 document.getElementById('today-date').textContent = new Date().toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
+document.getElementById('account-date-filter').value = todayISO;
+document.getElementById('pur-date').value = todayISO;
 
 // ============ AUTH ============
 onAuthStateChanged(auth, user => {
@@ -877,7 +911,7 @@ window.openPatientModal = (id) => {
       <div class="info-item"><label>الاسم</label><p>${p.name}</p></div>
       <div class="info-item"><label>الهاتف</label><p>${p.phone||'-'}</p></div>
       <div class="info-item"><label>الإجراء الطبي</label><p>${p.procedure||'-'}</p></div>
-      <div class="info-item"><label>التاريخ</label><p>${p.createdAt?formatDate(p.createdAt):'-'}</p></div>
+      <div class="info-item"><label>التاريخ</label><p>${p.createdAt?formatDateWithTime(p.createdAt):'-'}</p></div>
     </div>
     <div class="finance-calc">
       <div class="calc-row"><span class="calc-label">💰 الإجمالي</span><span class="calc-value">${(p.total||0).toLocaleString('ar-EG')} جنيه</span></div>
@@ -948,6 +982,7 @@ window.updatePatient = async (id) => {
     if(idx>=0) window._patients[idx] = {...window._patients[idx], ...data};
     showToast('✅ تم تحديث البيانات');
     closeModal();
+    if(document.getElementById('page-accounts').classList.contains('active')) renderAccounts();
   } catch(e) { showToast('حدث خطأ', true); }
 };
 
@@ -967,6 +1002,7 @@ window.deletePatient = async (id) => {
     await deleteDoc(doc(db,'patients',id));
     window._patients = window._patients.filter(p=>p.id!==id);
     renderPatients();
+    if(document.getElementById('page-accounts').classList.contains('active')) renderAccounts();
     showToast('🗑️ تم حذف المريض');
   } catch(e) { showToast('حدث خطأ', true); }
 };
@@ -1016,56 +1052,120 @@ window.deleteXray = async (patientId, xrayIndex) => {
   } catch(e) { showToast('حدث خطأ', true); }
 };
 
-// ============ ACCOUNTS ============
+// ============ ACCOUNTS (TODAY + MONTHLY) ============
 window.renderAccounts = () => {
   const pts = window._patients;
-  const totalRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
-  const totalPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
-  const totalRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
-  const totalDoctorShare = pts.reduce((s,p)=>s+(p.doctorShare||0),0);
-  const totalDoctorEarned = pts.reduce((s,p)=>s+((p.paid||0)*0.6),0); 
-  const totalDoctorRemaining = pts.reduce((s,p)=>s+(p.doctorRemaining||0),0); // متبقي الطبيب من فلوس الناس
+  const filterDateVal = document.getElementById('account-date-filter').value;
+  
+  // تحديث عنوان إحصائيات اليوم المحدد بصيغة عربية
+  if(filterDateVal) {
+    const dObj = new Date(filterDateVal);
+    document.getElementById('accounts-day-title').textContent = `📊 إحصائيات وعمليات يوم: ${dObj.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'})}`;
+  }
+
+  // 1. حسابات اليوم المحدد فقط لبطاقات الإحصائيات وجدول اليوم
+  const dayPatients = pts.filter(p => {
+    if (!p.createdAt) return false;
+    const pDate = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+    const pDateStr = pDate.toISOString().split('T')[0];
+    return pDateStr === filterDateVal;
+  });
+
+  const dayRevenue = dayPatients.reduce((s,p)=>s+(p.total||0),0);
+  const dayPaid = dayPatients.reduce((s,p)=>s+(p.paid||0),0);
+  const dayRemaining = dayPatients.reduce((s,p)=>s+(p.remaining||0),0);
+  const dayDoctorEarned = dayPatients.reduce((s,p)=>s+((p.paid||0)*0.6),0); 
+  const dayDoctorRemaining = dayPatients.reduce((s,p)=>s+(p.doctorRemaining||0),0);
 
   document.getElementById('account-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${totalRevenue.toLocaleString('ar-EG')}</div><div class="stat-label">المبلغ الكلي المطلوب (جنيه)</div></div>
-    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--success)">${totalPaid.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي الكاش المحصّل (جنيه)</div></div>
-    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${totalRemaining.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي المتبقي بطرف المرضى</div></div>
-    <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--primary)">${totalDoctorEarned.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي ما استلمه الدكتور فعلياً (60% من المدفوع)</div></div>
-    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--warning)">${totalDoctorRemaining.toLocaleString('ar-EG')}</div><div class="stat-label">متبقي مستحق للدكتور (60% من فلوس الناس)</div></div>`;
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${dayRevenue.toLocaleString('ar-EG')} ج</div><div class="stat-label">المبلغ الكلي المطلوب اليوم</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--success)">${dayPaid.toLocaleString('ar-EG')} ج</div><div class="stat-label">إجمالي الكاش المحصّل اليوم</div></div>
+    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${dayRemaining.toLocaleString('ar-EG')} ج</div><div class="stat-label">إجمالي المتبقي عند مرضى اليوم</div></div>
+    <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--primary)">${dayDoctorEarned.toLocaleString('ar-EG')} ج</div><div class="stat-label">ما يستلمه الدكتور اليوم (فعلي)</div></div>
+    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--warning)">${dayDoctorRemaining.toLocaleString('ar-EG')} ج</div><div class="stat-label">متبقي مستحق للدكتور</div></div>`;
 
-  document.getElementById('accounts-table').innerHTML = pts.length ? `<table>
-    <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>مستلم الدكتور (60%)</th><th>التاريخ</th><th></th></tr></thead>
-    <tbody>${pts.map((p,i)=>`<tr>
+  // جدول معاملات اليوم المحدد
+  document.getElementById('accounts-table').innerHTML = dayPatients.length ? `<table>
+    <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>المبلغ الكلي المطلوب</th><th>المدفوع</th><th>المتبقي الكلي</th><th>حصة الدكتور المستلمة (60%)</th><th>متبقي الدكتور</th><th>إجراء</th></tr></thead>
+    <tbody>${dayPatients.map((p,i)=>`<tr>
       <td>${i+1}</td>
       <td><strong>${p.name}</strong></td>
-      <td>${p.procedure||'-'}</td>
+      <td><span class="badge badge-blue">${p.procedure||'-'}</span></td>
       <td>${(p.total||0).toLocaleString('ar-EG')} ج</td>
       <td style="color:var(--success);font-weight:700">${(p.paid||0).toLocaleString('ar-EG')} ج</td>
       <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${(p.remaining||0).toLocaleString('ar-EG')} ج</span></td>
       <td style="color:var(--primary);font-weight:700">${((p.paid||0)*0.6).toLocaleString('ar-EG')} ج</td>
-      <td><span class="date-badge">📅 ${p.createdAt?formatDate(p.createdAt):'-'}</span></td>
+      <td style="color:var(--warning);font-weight:700">${(p.doctorRemaining||0).toLocaleString('ar-EG')} ج</td>
       <td><button class="btn btn-edit btn-sm" onclick="openPayModal('${p.id}')">💳 دفع</button></td>
     </tr>`).join('')}</tbody></table>`
-  : '<div class="empty-state"><div class="empty-icon">💰</div><p>لا توجد بيانات</p></div>';
+  : '<div class="empty-state"><div class="empty-icon">📅</div><p>لا توجد أي معاملات أو مرضى مسجلين في هذا اليوم</p></div>';
 
+
+  // 2. تجميع التقارير الشهرية تلقائياً (لكل الأوقات) ليعرض مايو، يونيو، إلخ.
+  const monthlyData = {};
+  pts.forEach(p => {
+    if (!p.createdAt) return;
+    const pDate = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+    // الحصول على مفتاح الشهر والسنة مثل "2026-05" لفرز دقيق، وعرضه باسم الشهر العربي
+    const monthKey = pDate.toLocaleString('ar-EG', { year: 'numeric', month: 'long' });
+    
+    if(!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { total: 0, paid: 0, remaining: 0, docEarned: 0, docRemaining: 0 };
+    }
+    monthlyData[monthKey].total += (p.total || 0);
+    monthlyData[monthKey].paid += (p.paid || 0);
+    monthlyData[monthKey].remaining += (p.remaining || 0);
+    monthlyData[monthKey].docEarned += ((p.paid || 0) * 0.6);
+    monthlyData[monthKey].docRemaining += (p.doctorRemaining || 0);
+  });
+
+  const monthKeys = Object.keys(monthlyData);
+  document.getElementById('monthly-report-table').innerHTML = monthKeys.length ? `<table>
+    <thead>
+      <tr>
+        <th>الشهر</th>
+        <th>المبلغ الكلي المطلوب</th>
+        <th>إجمالي الكاش المحصل</th>
+        <th>إجمالي متبقي المرضى</th>
+        <th>ما استلمه الدكتور فعلياً</th>
+        <th>متبقي مستحق للدكتور</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${monthKeys.map(mKey => `
+        <tr>
+          <td><strong>${mKey}</strong></td>
+          <td style="font-weight:700;">${monthlyData[mKey].total.toLocaleString('ar-EG')} ج</td>
+          <td style="color:var(--success); font-weight:700;">${monthlyData[mKey].paid.toLocaleString('ar-EG')} ج</td>
+          <td style="color:var(--danger); font-weight:700;">${monthlyData[mKey].remaining.toLocaleString('ar-EG')} TIM ج</td>
+          <td style="color:var(--primary); font-weight:700;">${monthlyData[mKey].docEarned.toLocaleString('ar-EG')} ج</td>
+          <td style="color:var(--warning); font-weight:700;">${monthlyData[mKey].docRemaining.toLocaleString('ar-EG')} ج</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>` : '<div class="empty-state"><p>لا توجد بيانات شهرية كافية بعد</p></div>';
+
+
+  // 3. جدول المديونيات والمتأخرات الثابت (لكل الأوقات) معدل بالخانات الجديدة
   const debtors = pts.filter(p=>(p.remaining||0)>0);
   document.getElementById('debtors-table').innerHTML = debtors.length ? `<table>
-    <thead><tr><th>#</th><th>المريض</th><th>الهاتف</th><th>المتبقي الكلي</th><th>متبقي الدكتور</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th>المريض</th><th>الهاتف</th><th>المتبقي الكلي للمحل</th><th>متبقي مستحق للدكتور</th><th>تاريخ التسجيل</th><th>إجراء</th></tr></thead>
     <tbody>${debtors.map((p,i)=>`<tr>
       <td>${i+1}</td>
       <td><strong style="color:var(--danger)">${p.name}</strong></td>
       <td>${p.phone||'-'}</td>
       <td style="color:var(--danger);font-weight:700">${(p.remaining||0).toLocaleString('ar-EG')} جنيه</td>
-      <td style="color:var(--warning)">${(p.doctorRemaining||0).toLocaleString('ar-EG')} جنيه</td>
+      <td style="color:var(--warning);font-weight:700">${(p.doctorRemaining||0).toLocaleString('ar-EG')} جنيه</td>
+      <td><span class="date-badge">📅 ${p.createdAt?formatDate(p.createdAt):'-'}</span></td>
       <td><button class="btn btn-success btn-sm" onclick="openPayModal('${p.id}')">💳 تسجيل دفع</button></td>
     </tr>`).join('')}</tbody></table>`
-  : '<div class="empty-state"><div class="empty-icon">🎉</div><p>لا يوجد مرضى بمبالغ متأخرة</p></div>';
+  : '<div class="empty-state"><div class="empty-icon">🎉</div><p>ممتاز! لا يوجد أي مرضى متبقي عليهم مبالغ متأخرة</p></div>';
 };
 
 window.openPayModal = (id) => {
   const p = window._patients.find(x=>x.id===id);
   if(!p) return;
-  const amount = prompt(`تسجيل دفع جديد للمريض: ${p.name}\nالمتبقي الحالي: ${p.remaining} جنيه\n\nأدخل المبلغ المدفوع:`);
+  const amount = prompt(`تسجيل دفع جديد للمريض: ${p.name}\nالمتبقي الحالي: ${p.remaining} جنيه\n\nأدخل المبلغ المدفوع الجديد:`);
   if(!amount) return;
   const newPaid = (p.paid||0) + parseFloat(amount);
   const newRemaining = (p.total||0) - newPaid;
@@ -1076,33 +1176,56 @@ window.openPayModal = (id) => {
     updatedAt: serverTimestamp()
   }).then(()=>{
     const idx = window._patients.findIndex(x=>x.id===id);
-    if(idx>=0) { window._patients[idx].paid=newPaid; window._patients[idx].remaining=newRemaining; }
-    showToast('✅ تم تسجيل الدفع');
+    if(idx>=0) { 
+      window._patients[idx].paid=newPaid; 
+      window._patients[idx].remaining=newRemaining;
+      window._patients[idx].doctorPaid = newPaid * 0.6;
+      window._patients[idx].doctorRemaining = (p.total * 0.6) - (newPaid * 0.6);
+    }
+    showToast('✅ تم تسجيل الدفع وتحديث نسب وحسابات الطبيب');
     renderAccounts();
   }).catch(()=>showToast('حدث خطأ',true));
 };
 
-// ============ PURCHASES ============
+// ============ PURCHASES (AUTO-CALCULATE + DATE) ============
+window.calcPurchaseTotal = () => {
+  const unitPrice = parseFloat(document.getElementById('pur-unit-price').value) || 0;
+  const qty = parseFloat(document.getElementById('pur-qty').value) || 1;
+  const totalPriceInput = document.getElementById('pur-price');
+  totalPriceInput.value = unitPrice * qty;
+};
+
 window.addPurchase = async () => {
   const name = document.getElementById('pur-name').value.trim();
-  const price = parseFloat(document.getElementById('pur-price').value)||0;
-  const qty = document.getElementById('pur-qty').value.trim();
+  const unitPrice = parseFloat(document.getElementById('pur-unit-price').value) || 0;
+  const qty = parseFloat(document.getElementById('pur-qty').value) || 1;
+  const price = unitPrice * qty; // المبلغ الكلي التلقائي
+  const pDate = document.getElementById('pur-date').value;
   const note = document.getElementById('pur-note').value.trim();
   
-  if(!name || price <= 0) { showToast('يرجى إدخال اسم المادة والسعر بشكل صحيح', true); return; }
+  if(!name || unitPrice <= 0 || !pDate) { showToast('يرجى إدخال البيانات المكتوبة بشكل صحيح وتحديد التاريخ', true); return; }
   
   try {
-    const data = { name, price, qty, note, createdAt: serverTimestamp() };
+    const data = { 
+      name, 
+      unitPrice,
+      qty: qty + " قطعة", 
+      price, 
+      purchaseDate: pDate,
+      note, 
+      createdAt: serverTimestamp() 
+    };
     const docRef = await addDoc(collection(db, 'purchases'), data);
     window._purchases.unshift({ id: docRef.id, ...data, createdAt: { toDate: () => new Date() } });
     
     document.getElementById('pur-name').value = '';
-    document.getElementById('pur-price').value = '';
-    document.getElementById('pur-qty').value = '';
+    document.getElementById('pur-unit-price').value = '';
+    document.getElementById('pur-qty').value = '1';
+    document.getElementById('pur-price').value = '0';
     document.getElementById('pur-note').value = '';
     
     renderPurchases();
-    showToast('✅ تم إضافة المشتريات والمصاريف بنجاح');
+    showToast('✅ تم إضافة بند المصاريف والمشتريات بنجاح');
   } catch(e) { showToast('حدث خطأ أثناء إضافة المشتريات', true); }
 };
 
@@ -1111,7 +1234,7 @@ window.renderPurchases = () => {
   const summaryContainer = document.getElementById('purchases-summary');
   
   const totalSpent = window._purchases.reduce((s, p) => s + (p.price || 0), 0);
-  summaryContainer.textContent = `🛒 إجمالي المصاريف والمشتريات: ${totalSpent.toLocaleString('ar-EG')} جنيه مصري`;
+  summaryContainer.textContent = `🛒 إجمالي المصاريف والمشتريات العام: ${totalSpent.toLocaleString('ar-EG')} جنيه مصري`;
   
   if(!window._purchases.length) {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">🛍️</div><p>لا يوجد مشتريات مسجلة حتى الآن</p></div>';
@@ -1119,16 +1242,20 @@ window.renderPurchases = () => {
   }
   
   container.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>العنصر / البيان</th><th>المبلغ المدفوع</th><th>الكمية</th><th>ملاحظات</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
-    <tbody>${window._purchases.map((p, i) => `<tr>
-      <td>${i+1}</td>
-      <td><strong>${p.name}</strong></td>
-      <td style="color:var(--danger); font-weight:700;">${(p.price||0).toLocaleString('ar-EG')} ج</td>
-      <td>${p.qty || '-'}</td>
-      <td>${p.note || '-'}</td>
-      <td><span class="date-badge">📅 ${p.createdAt ? formatDate(p.createdAt) : '-'}</span></td>
-      <td><button class="btn btn-danger btn-sm" onclick="deletePurchase('${p.id}')">🗑️</button></td>
-    </tr>`).join('')}</tbody></table></div>`;
+    <thead><tr><th>#</th><th>العنصر / البيان</th><th>سعر القطعة</th><th>الكمية</th><th>المبلغ الإجمالي الكلي</th><th>تاريخ الشراء</th><th>ملاحظات</th><th>إجراءات</th></tr></thead>
+    <tbody>${window._purchases.map((p, i) => {
+      // عرض تاريخ الشراء المختار يدوياً، وإذا لم يتوفر يعرض تاريخ الإنشاء بالسيرفر
+      let displayDate = p.purchaseDate || (p.createdAt ? formatDate(p.createdAt) : '-');
+      return `<tr>
+        <td>${i+1}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${(p.unitPrice || p.price || 0).toLocaleString('ar-EG')} ج</td>
+        <td><span class="badge badge-blue">${p.qty || '1 قطعة'}</span></td>
+        <td style="color:var(--danger); font-weight:700;">${(p.price||0).toLocaleString('ar-EG')} ج</td>
+        <td><span class="date-badge">📅 ${displayDate}</span></td>
+        <td>${p.note || '-'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deletePurchase('${p.id}')">🗑️</button></td>
+      </tr>`}).join('')}</tbody></table></div>`;
 };
 
 window.deletePurchase = async (id) => {
