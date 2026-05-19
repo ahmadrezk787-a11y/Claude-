@@ -7,19 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
   :root {
-    --primary: #1a6b5a;
-    --primary-light: #22876f;
-    --primary-dark: #134f43;
-    --accent: #f0a500;
-    --accent-light: #ffc93c;
-    --bg: #f0f4f3;
+    --primary: #1e40af;
+    --primary-light: #3b82f6;
+    --primary-dark: #1e3a8a;
+    --accent: #f59e0b;
+    --accent-light: #fbbf24;
+    --bg: #f8fafc;
     --card: #ffffff;
-    --text: #1a2e2b;
-    --text-muted: #6b8a84;
-    --border: #d4e4e0;
-    --danger: #e03e3e;
-    --success: #27ae60;
-    --warning: #f39c12;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
     --sidebar-w: 240px;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -28,12 +28,12 @@
   /* AUTH */
   #auth-screen {
     min-height:100vh; display:flex; align-items:center; justify-content:center;
-    background: linear-gradient(135deg, #134f43 0%, #1a6b5a 50%, #22876f 100%);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
     position:relative; overflow:hidden;
   }
   #auth-screen::before {
     content:''; position:absolute; inset:0;
-    background: radial-gradient(circle at 20% 80%, rgba(240,165,0,0.15) 0%, transparent 50%),
+    background: radial-gradient(circle at 20% 80%, rgba(245,158,11,0.15) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%);
   }
   .auth-box {
@@ -46,11 +46,11 @@
   .auth-logo .logo-icon {
     width:72px; height:72px; background:linear-gradient(135deg,var(--primary),var(--primary-light));
     border-radius:20px; display:flex; align-items:center; justify-content:center;
-    font-size:32px; margin:0 auto 12px; box-shadow:0 8px 24px rgba(26,107,90,0.3);
+    font-size:32px; margin:0 auto 12px; box-shadow:0 8px 24px rgba(30,64,175,0.3);
   }
   .auth-logo h1 { font-size:22px; font-weight:800; color:var(--primary); }
   .auth-logo p { font-size:13px; color:var(--text-muted); margin-top:4px; }
-  .auth-tabs { display:flex; background:#f0f4f3; border-radius:12px; padding:4px; margin-bottom:28px; }
+  .auth-tabs { display:flex; background:#f1f5f9; border-radius:12px; padding:4px; margin-bottom:28px; }
   .auth-tab {
     flex:1; padding:10px; text-align:center; border-radius:10px; cursor:pointer;
     font-size:14px; font-weight:600; transition:all 0.3s; color:var(--text-muted);
@@ -68,9 +68,9 @@
     width:100%; padding:14px; background:linear-gradient(135deg,var(--primary),var(--primary-light));
     color:white; border:none; border-radius:12px; font-family:'Cairo',sans-serif;
     font-size:15px; font-weight:700; cursor:pointer; transition:all 0.2s;
-    box-shadow:0 4px 16px rgba(26,107,90,0.3);
+    box-shadow:0 4px 16px rgba(30,64,175,0.3);
   }
-  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(26,107,90,0.4); }
+  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(30,64,175,0.4); }
   .auth-error { color:var(--danger); font-size:13px; text-align:center; margin-top:12px; display:none; }
 
   /* APP LAYOUT */
@@ -164,7 +164,7 @@
 
   /* Finance calc */
   .finance-calc {
-    background:linear-gradient(135deg, #f8fffe, #e8f5f2); border:2px solid var(--border);
+    background:linear-gradient(135deg, #f8fafc, #eff6ff); border:2px solid var(--border);
     border-radius:12px; padding:16px; margin-top:8px;
   }
   .calc-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; }
@@ -174,28 +174,18 @@
   .calc-value.green { color:var(--success); }
   .calc-value.orange { color:var(--warning); }
   .calc-value.red { color:var(--danger); }
+  .calc-value.blue { color:var(--primary); }
 
   /* BUTTONS */
   .btn { padding:10px 20px; border-radius:10px; border:none; cursor:pointer; font-family:'Cairo',sans-serif; font-size:14px; font-weight:600; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
   .btn-success { background:var(--success); color:white; }
-  .btn-success:hover { background:#219150; transform:translateY(-1px); }
+  .btn-success:hover { background:#059669; transform:translateY(-1px); }
   .btn-danger { background:var(--danger); color:white; }
-  .btn-danger:hover { background:#c0392b; }
+  .btn-danger:hover { background:#dc2626; }
   .btn-warning { background:var(--warning); color:white; }
-  .btn-edit { background:#3498db; color:white; }
-  .btn-edit:hover { background:#2980b9; }
+  .btn-edit { background:#2563eb; color:white; }
+  .btn-edit:hover { background:#1d4ed8; }
   .btn-sm { padding:6px 12px; font-size:12px; border-radius:8px; }
-
-  /* MINIMAL BUTTONS FOR ACTIONS */
-  .btn-action-minimal {
-    background: transparent; border: none; cursor: pointer; font-size: 14px; padding: 4px 8px; border-radius: 6px; transition: all 0.2s;
-  }
-  .btn-action-minimal.edit { color: #3498db; }
-  .btn-action-minimal.edit:hover { background: #e8f4fd; }
-  .btn-action-minimal.delete { color: var(--danger); }
-  .btn-action-minimal.delete:hover { background: #fde8e8; }
-  .btn-action-minimal.pay { color: var(--success); font-weight: 600; }
-  .btn-action-minimal.pay:hover { background: #e8f8f0; }
 
   /* TABLE */
   .table-wrap { overflow-x:auto; }
@@ -203,11 +193,12 @@
   thead tr { background:var(--bg); }
   th { padding:12px 14px; text-align:right; font-size:13px; font-weight:700; color:var(--text-muted); border-bottom:2px solid var(--border); white-space:nowrap; }
   td { padding:12px 14px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle; }
-  tr:hover td { background:#f8fffe; }
+  tr:hover td { background:#eff6ff; }
   .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
-  .badge-green { background:#e8f8f0; color:var(--success); }
-  .badge-red { background:#fde8e8; color:var(--danger); }
-  .badge-orange { background:#fef3e2; color:var(--warning); }
+  .badge-green { background:#d1fae5; color:var(--success); }
+  .badge-red { background:#fee2e2; color:var(--danger); }
+  .badge-orange { background:#fef3c7; color:var(--warning); }
+  .badge-blue { background:#dbeafe; color:var(--primary); }
 
   /* PATIENT MODAL */
   .modal-overlay {
@@ -238,7 +229,7 @@
     border:2px dashed var(--border); border-radius:12px; padding:24px; text-align:center;
     cursor:pointer; transition:all 0.2s; margin-bottom:12px;
   }
-  .img-upload-area:hover { border-color:var(--primary); background:#f0f9f7; }
+  .img-upload-area:hover { border-color:var(--primary); background:#eff6ff; }
   .img-upload-area input { display:none; }
   .xray-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; margin-top:12px; }
   .xray-item { position:relative; border-radius:10px; overflow:hidden; aspect-ratio:1; }
@@ -250,7 +241,7 @@
   }
 
   /* STATS */
-  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px; }
   .stat-card {
     background:white; border-radius:14px; padding:20px; border:1px solid var(--border);
     box-shadow:0 2px 8px rgba(0,0,0,0.05);
@@ -283,14 +274,6 @@
     padding:3px 10px; border-radius:20px; font-size:11px; color:var(--text-muted); font-weight:600;
   }
 
-  /* Filter date inputs */
-  .filter-date-row {
-    display: flex; gap: 12px; align-items: center; margin-top: 10px; background: #fafafa; padding: 12px; border-radius: 10px; border: 1px dashed var(--border);
-  }
-  .filter-date-row input {
-    padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13px;
-  }
-
   /* Responsive */
   @media(max-width:768px) {
     .sidebar { transform:translateX(100%); transition:transform 0.3s; }
@@ -300,7 +283,6 @@
     .form-grid { grid-template-columns:1fr; }
     .patient-info-grid { grid-template-columns:1fr; }
     .mobile-menu-btn { display:flex !important; }
-    .filter-date-row { flex-direction: column; align-items: stretch; }
   }
   .mobile-menu-btn {
     display:none; position:fixed; top:16px; right:16px; z-index:99;
@@ -398,6 +380,9 @@
       <div class="nav-item" onclick="showPage('accounts')">
         <span class="nav-icon">💰</span> الحسابات
       </div>
+      <div class="nav-item" onclick="showPage('purchases')">
+        <span class="nav-icon">🛍️</span> المشتريات والمصاريف
+      </div>
       <div class="nav-item" onclick="showPage('shortage')">
         <span class="nav-icon">📋</span> قائمة النواقص
       </div>
@@ -470,8 +455,16 @@
             <span class="calc-value red" id="calc-remaining">0 جنيه</span>
           </div>
           <div class="calc-row">
-            <span class="calc-label">👨‍⚕️ نسبة الدكتور من المدفوع (60%)</span>
+            <span class="calc-label">👨‍⚕️ نسبة الدكتور الإجمالية (60%)</span>
             <span class="calc-value orange" id="calc-doctor">0 جنيه</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-label">💵 مستحق للدكتور حالياً (60% من المدفوع)</span>
+            <span class="calc-value blue" id="calc-doctor-earned">0 جنيه</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-label">⏳ المتبقي لحصة الدكتور</span>
+            <span class="calc-value red" id="calc-doctor-remaining">0 جنيه</span>
           </div>
         </div>
 
@@ -501,29 +494,10 @@
       <div class="page-header">
         <div>
           <h2>💰 الحسابات</h2>
-          <p>إجمالي المدفوعات والمديونيات</p>
+          <p>إجمالي المدفوعات والمديونيات ونسب الطبيب من المحصل</p>
         </div>
       </div>
-      
       <div class="stats-grid" id="account-stats"></div>
-      
-      <div class="card" style="margin-bottom:20px; border: 2px solid var(--primary-light);">
-        <div class="card-title">👨‍⚕️ أرباح الطبيب خلال فترة معينة</div>
-        <div class="filter-date-row">
-          <label>من تاريخ:</label>
-          <input type="date" id="doctor-date-from" onchange="calculateDoctorIncomeByDate()"/>
-          <label>إلى تاريخ:</label>
-          <input type="date" id="doctor-date-to" onchange="calculateDoctorIncomeByDate()"/>
-          <button class="btn btn-sm btn-success" onclick="calculateDoctorIncomeByDate()">🔍 تحديث الفلتر</button>
-        </div>
-        <div class="finance-calc" style="margin-top:14px;">
-          <div class="calc-row">
-            <span class="calc-label" style="font-size:15px; font-weight:700;">💸 إجمالي مستحقات الطبيب للفترة المحددة:</span>
-            <span class="calc-value orange" id="doctor-date-result" style="font-size:18px;">0 جنيه</span>
-          </div>
-        </div>
-      </div>
-
       <div class="card" style="margin-bottom:20px;">
         <div class="card-title">📊 جميع المرضى والمدفوعات</div>
         <div class="table-wrap" id="accounts-table"></div>
@@ -531,6 +505,42 @@
       <div class="card">
         <div class="card-title">⚠️ المرضى عليهم مبالغ متأخرة</div>
         <div class="table-wrap" id="debtors-table"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-purchases">
+      <div class="page-header">
+        <div>
+          <h2>🛍️ المشتريات والمصاريف</h2>
+          <p>تسجيل ومتابعة المواد والمستلزمات التي تم شراؤها</p>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">➕ تسجيل شراء مستلزمات جديدة</div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>اسم المادة / المستلزم *</label>
+            <input type="text" id="pur-name" placeholder="مثال: علبة كمامات، بنج البوتاسيوم..."/>
+          </div>
+          <div class="field-group">
+            <label>السعر المدفوع (جنيه) *</label>
+            <input type="number" id="pur-price" placeholder="0"/>
+          </div>
+          <div class="field-group">
+            <label>الكمية</label>
+            <input type="text" id="pur-qty" placeholder="مثال: 5 علب، 2 جهاز..."/>
+          </div>
+          <div class="field-group">
+            <label>ملاحظات</label>
+            <input type="text" id="pur-note" placeholder="أي تفاصيل أخرى كالمورد أو مكان الشراء"/>
+          </div>
+        </div>
+        <button class="btn btn-success" style="margin-top:12px;" onclick="addPurchase()">➕ إضافة للمشتريات</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🧾 سجل المشتريات والمصاريف الكلي</div>
+        <div id="purchases-summary" style="margin-bottom: 16px; font-weight: 700; color: var(--primary);"></div>
+        <div id="purchases-list"><div class="loading">⏳ جاري التحميل...</div></div>
       </div>
     </div>
 
@@ -605,6 +615,7 @@ const storage = getStorage(app);
 window._currentUser = null;
 window._patients = [];
 window._shortages = [];
+window._purchases = [];
 window._editingPatientId = null;
 
 // ============ DATE ============
@@ -681,10 +692,11 @@ window.showPage = (page) => {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   const navItems = document.querySelectorAll('.nav-item');
-  const map = {'add-patient':0,'patients':1,'accounts':2,'shortage':3};
+  const map = {'add-patient':0,'patients':1,'accounts':2, 'purchases':3, 'shortage':4};
   if(map[page]!==undefined) navItems[map[page]].classList.add('active');
   if(page==='patients') renderPatients();
-  if(page==='accounts') { renderAccounts(); calculateDoctorIncomeByDate(); }
+  if(page==='accounts') renderAccounts();
+  if(page==='purchases') renderPurchases();
   if(page==='shortage') renderShortages();
   // close mobile sidebar
   document.getElementById('sidebar').classList.remove('open');
@@ -700,6 +712,7 @@ window.toggleSidebar = () => {
 async function loadAll() {
   await loadPatients();
   await loadShortages();
+  await loadPurchases();
 }
 
 async function loadPatients() {
@@ -718,16 +731,28 @@ async function loadShortages() {
   } catch(e) { window._shortages = []; }
 }
 
+async function loadPurchases() {
+  try {
+    const q = query(collection(db,'purchases'), orderBy('createdAt','desc'));
+    const snap = await getDocs(q);
+    window._purchases = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  } catch(e) { window._purchases = []; }
+}
+
 // ============ FINANCE CALC ============
 window.calcFinance = () => {
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
   const remaining = total - paid;
-  const doctor = paid * 0.6; // الدكتور يحصل على 60٪ من المبلغ المدفوع حالياً
+  const doctor = total * 0.6;
+  const doctorEarned = paid * 0.6; // نسبة الدكتور الفعلية من المدفوع
+  const doctorRemaining = doctor - doctorEarned;
   document.getElementById('calc-total').textContent = total.toLocaleString('ar-EG') + ' جنيه';
   document.getElementById('calc-paid').textContent = paid.toLocaleString('ar-EG') + ' جنيه';
   document.getElementById('calc-remaining').textContent = remaining.toLocaleString('ar-EG') + ' جنيه';
   document.getElementById('calc-doctor').textContent = doctor.toLocaleString('ar-EG') + ' جنيه';
+  document.getElementById('calc-doctor-earned').textContent = doctorEarned.toLocaleString('ar-EG') + ' جنيه';
+  document.getElementById('calc-doctor-remaining').textContent = doctorRemaining.toLocaleString('ar-EG') + ' جنيه';
 };
 
 // ============ AUTOCOMPLETE ============
@@ -762,11 +787,13 @@ window.savePatient = async () => {
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
   if(!name||!phone||!procedure) { showToast('يرجى تعبئة الاسم والهاتف والإجراء', true); return; }
   const remaining = total - paid;
-  const doctorShare = paid * 0.6; // 60% من المدفوع
+  const doctorShare = total * 0.6;
+  const doctorPaid = paid * 0.6;
+  const doctorRemaining = doctorShare - doctorPaid;
   try {
     const data = {
       name, phone, procedure, total, paid, remaining,
-      doctorShare,
+      doctorShare, doctorPaid, doctorRemaining,
       notes: '', xrays: [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -800,15 +827,15 @@ window.renderPatients = () => {
         <td>${i+1}</td>
         <td><strong style="cursor:pointer;color:var(--primary);" onclick="openPatientModal('${p.id}')">${p.name}</strong></td>
         <td>${p.phone||'-'}</td>
-        <td><span class="badge badge-green">${p.procedure||'-'}</span></td>
+        <td><span class="badge badge-blue">${p.procedure||'-'}</span></td>
         <td>${(p.total||0).toLocaleString('ar-EG')} ج</td>
         <td style="color:var(--success);font-weight:700;">${(p.paid||0).toLocaleString('ar-EG')} ج</td>
         <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${(p.remaining||0).toLocaleString('ar-EG')} ج</span></td>
         <td><span class="date-badge">📅 ${p.createdAt ? formatDate(p.createdAt) : '-'}</span></td>
         <td>
           <div class="actions-row">
-            <button class="btn-action-minimal edit" onclick="openPatientModal('${p.id}')" title="تعديل وملف">✏️ ملف</button>
-            <button class="btn-action-minimal delete" onclick="deletePatient('${p.id}')" title="حذف">🗑️ حذف</button>
+            <button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 ملف</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePatient('${p.id}')">🗑️</button>
           </div>
         </td>
       </tr>`).join('')}
@@ -838,7 +865,9 @@ window.openPatientModal = (id) => {
       <div class="calc-row"><span class="calc-label">💰 الإجمالي</span><span class="calc-value">${(p.total||0).toLocaleString('ar-EG')} جنيه</span></div>
       <div class="calc-row"><span class="calc-label">✅ المدفوع</span><span class="calc-value green">${(p.paid||0).toLocaleString('ar-EG')} جنيه</span></div>
       <div class="calc-row"><span class="calc-label">⏳ المتبقي</span><span class="calc-value red">${(p.remaining||0).toLocaleString('ar-EG')} جنيه</span></div>
-      <div class="calc-row"><span class="calc-label">👨‍⚕️ حصة الدكتور (60% من المدفوع)</span><span class="calc-value orange">${(p.doctorShare||0).toLocaleString('ar-EG')} جنيه</span></div>
+      <div class="calc-row"><span class="calc-label">👨‍⚕️ حصة الدكتور من الإجمالي (60%)</span><span class="calc-value orange">${(p.doctorShare||0).toLocaleString('ar-EG')} جنيه</span></div>
+      <div class="calc-row"><span class="calc-label">💵 مستلم فعلياً (60% من المدفوع)</span><span class="calc-value blue">${((p.paid||0)*0.6).toLocaleString('ar-EG')} جنيه</span></div>
+      <div class="calc-row"><span class="calc-label">⏳ متبقي حصة الدكتور</span><span class="calc-value red">${(p.doctorRemaining||0).toLocaleString('ar-EG')} جنيه</span></div>
     </div>
 
     <div class="section-title">📝 تعديل البيانات</div>
@@ -871,11 +900,15 @@ window.calcEditFinance = () => {
   const total = parseFloat(document.getElementById('edit-total')?.value)||0;
   const paid = parseFloat(document.getElementById('edit-paid')?.value)||0;
   const remaining = total - paid;
-  const doctor = paid * 0.6; // حُسبت من المدفوع
+  const doctor = total * 0.6;
+  const doctorEarned = paid * 0.6;
+  const doctorRemaining = doctor - doctorEarned;
   const el = document.getElementById('edit-finance-calc');
   if(el) el.innerHTML = `
     <div class="calc-row"><span class="calc-label">المتبقي الكلي</span><span class="calc-value red">${remaining.toLocaleString('ar-EG')} جنيه</span></div>
-    <div class="calc-row"><span class="calc-label">حصة الدكتور (من المدفوع الجديد)</span><span class="calc-value orange">${doctor.toLocaleString('ar-EG')} جنيه</span></div>`;
+    <div class="calc-row"><span class="calc-label">حصة الدكتور من الإجمالي</span><span class="calc-value orange">${doctor.toLocaleString('ar-EG')} جنيه</span></div>
+    <div class="calc-row"><span class="calc-label">المستلم الفعلي للدكتور حالياً</span><span class="calc-value blue">${doctorEarned.toLocaleString('ar-EG')} جنيه</span></div>
+    <div class="calc-row"><span class="calc-label">متبقي الدكتور</span><span class="calc-value red">${doctorRemaining.toLocaleString('ar-EG')} جنيه</span></div>`;
 };
 
 window.updatePatient = async (id) => {
@@ -886,7 +919,9 @@ window.updatePatient = async (id) => {
     phone: document.getElementById('edit-phone').value,
     total, paid,
     remaining: total - paid,
-    doctorShare: paid * 0.6,
+    doctorShare: total * 0.6,
+    doctorPaid: paid * 0.6,
+    doctorRemaining: (total * 0.6) - (paid * 0.6),
     updatedAt: serverTimestamp()
   };
   try {
@@ -969,16 +1004,18 @@ window.renderAccounts = () => {
   const totalRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
   const totalPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
   const totalRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
-  const totalDoctor = pts.reduce((s,p)=>s+(p.doctorShare||0),0); // إجمالي حصة الطبيب من المبالغ المدفوعة بالكامل
+  const totalDoctorShare = pts.reduce((s,p)=>s+(p.doctorShare||0),0);
+  const totalDoctorEarned = pts.reduce((s,p)=>s+((p.paid||0)*0.6),0); // إجمالي ما استلمه الطبيب فعلياً من المدفوعات
 
   document.getElementById('account-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${totalRevenue.toLocaleString('ar-EG')}</div><div class="stat-label">المبلغ الإجمالي (جنيه)</div></div>
-    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--success)">${totalPaid.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي المحصّل (جنيه)</div></div>
-    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${totalRemaining.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي المتبقي (جنيه)</div></div>
-    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--warning)">${totalDoctor.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي حصة الدكتور الحالية (جنيه)</div></div>`;
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${totalRevenue.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي الإيرادات (جنيه)</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--success)">${totalPaid.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي الكاش المحصّل (جنيه)</div></div>
+    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${totalRemaining.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي المتبقي بطرف المرضى</div></div>
+    <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--primary)">${totalDoctorEarned.toLocaleString('ar-EG')}</div><div class="stat-label">إجمالي ما استلمه الدكتور فعلياً (60% من المدفوع)</div></div>
+    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--warning)">${totalDoctorShare.toLocaleString('ar-EG')}</div><div class="stat-label">مستهدف حصة الدكتور الكلية</div></div>`;
 
   document.getElementById('accounts-table').innerHTML = pts.length ? `<table>
-    <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>حصة الدكتور (60%)</th><th>التاريخ</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>مستلم الدكتور (60%)</th><th>التاريخ</th><th></th></tr></thead>
     <tbody>${pts.map((p,i)=>`<tr>
       <td>${i+1}</td>
       <td><strong>${p.name}</strong></td>
@@ -986,77 +1023,103 @@ window.renderAccounts = () => {
       <td>${(p.total||0).toLocaleString('ar-EG')} ج</td>
       <td style="color:var(--success);font-weight:700">${(p.paid||0).toLocaleString('ar-EG')} ج</td>
       <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${(p.remaining||0).toLocaleString('ar-EG')} ج</span></td>
-      <td style="color:var(--warning)">${(p.doctorShare||0).toLocaleString('ar-EG')} ج</td>
+      <td style="color:var(--primary);font-weight:700">${((p.paid||0)*0.6).toLocaleString('ar-EG')} ج</td>
       <td><span class="date-badge">📅 ${p.createdAt?formatDate(p.createdAt):'-'}</span></td>
-      <td><button class="btn-action-minimal pay" onclick="openPayModal('${p.id}')">💳 تسجيل دفعة</button></td>
+      <td><button class="btn btn-edit btn-sm" onclick="openPayModal('${p.id}')">💳 دفع</button></td>
     </tr>`).join('')}</tbody></table>`
   : '<div class="empty-state"><div class="empty-icon">💰</div><p>لا توجد بيانات</p></div>';
 
   const debtors = pts.filter(p=>(p.remaining||0)>0);
   document.getElementById('debtors-table').innerHTML = debtors.length ? `<table>
-    <thead><tr><th>#</th><th>المريض</th><th>الهاتف</th><th>المتبقي</th><th>حصة دكتور الحالية</th><th></th></tr></thead>
+    <thead><tr><th>#</th><th>المريض</th><th>الهاتف</th><th>المتبقي الكلي</th><th>متبقي الدكتور</th><th></th></tr></thead>
     <tbody>${debtors.map((p,i)=>`<tr>
       <td>${i+1}</td>
       <td><strong style="color:var(--danger)">${p.name}</strong></td>
       <td>${p.phone||'-'}</td>
       <td style="color:var(--danger);font-weight:700">${(p.remaining||0).toLocaleString('ar-EG')} جنيه</td>
-      <td style="color:var(--warning)">${(p.doctorShare||0).toLocaleString('ar-EG')} جنيه</td>
-      <td><button class="btn-action-minimal pay" onclick="openPayModal('${p.id}')">💳 سداد قسط</button></td>
+      <td style="color:var(--warning)">${(p.doctorRemaining||0).toLocaleString('ar-EG')} جنيه</td>
+      <td><button class="btn btn-success btn-sm" onclick="openPayModal('${p.id}')">💳 تسجيل دفع</button></td>
     </tr>`).join('')}</tbody></table>`
   : '<div class="empty-state"><div class="empty-icon">🎉</div><p>لا يوجد مرضى بمبالغ متأخرة</p></div>';
-};
-
-// ============ FILTER DOCTOR INCOME BY DATE ============
-window.calculateDoctorIncomeByDate = () => {
-  const fromVal = document.getElementById('doctor-date-from').value;
-  const toVal = document.getElementById('doctor-date-to').value;
-  
-  if(!fromVal || !toVal) {
-    document.getElementById('doctor-date-result').textContent = "يرجى تحديد تاريخ البداية والنهاية";
-    return;
-  }
-
-  const fromDate = new Date(fromVal);
-  fromDate.setHours(0,0,0,0);
-  const toDate = new Date(toVal);
-  toDate.setHours(23,59,59,999);
-
-  let totalDoctorPeriod = 0;
-
-  window._patients.forEach(p => {
-    if(p.createdAt) {
-      const pDate = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
-      if(pDate >= fromDate && pDate <= toDate) {
-        totalDoctorPeriod += (p.doctorShare || 0);
-      }
-    }
-  });
-
-  document.getElementById('doctor-date-result').textContent = totalDoctorPeriod.toLocaleString('ar-EG') + ' جنيه';
 };
 
 window.openPayModal = (id) => {
   const p = window._patients.find(x=>x.id===id);
   if(!p) return;
-  const amount = prompt(`تسجيل دفعة للمريض: ${p.name}\nالمتبقي الحالي: ${p.remaining} جنيه\n\nأدخل المبلغ المدفوع الجديد:`);
+  const amount = prompt(`تسجيل دفع جديد للمريض: ${p.name}\nالمتبقي الحالي: ${p.remaining} جنيه\n\nأدخل المبلغ المدفوع:`);
   if(!amount) return;
   const newPaid = (p.paid||0) + parseFloat(amount);
   const newRemaining = (p.total||0) - newPaid;
   updateDoc(doc(db,'patients',id), {
     paid: newPaid, remaining: newRemaining,
-    doctorShare: newPaid * 0.6,
+    doctorPaid: newPaid * 0.6,
+    doctorRemaining: (p.total * 0.6) - (newPaid * 0.6),
     updatedAt: serverTimestamp()
   }).then(()=>{
     const idx = window._patients.findIndex(x=>x.id===id);
-    if(idx>=0) { 
-      window._patients[idx].paid=newPaid; 
-      window._patients[idx].remaining=newRemaining; 
-      window._patients[idx].doctorShare = newPaid * 0.6;
-    }
-    showToast('✅ تم تسجيل الدفعة بنجاح');
+    if(idx>=0) { window._patients[idx].paid=newPaid; window._patients[idx].remaining=newRemaining; }
+    showToast('✅ تم تسجيل الدفع');
     renderAccounts();
-    calculateDoctorIncomeByDate();
   }).catch(()=>showToast('حدث خطأ',true));
+};
+
+// ============ PURCHASES ============
+window.addPurchase = async () => {
+  const name = document.getElementById('pur-name').value.trim();
+  const price = parseFloat(document.getElementById('pur-price').value)||0;
+  const qty = document.getElementById('pur-qty').value.trim();
+  const note = document.getElementById('pur-note').value.trim();
+  
+  if(!name || price <= 0) { showToast('يرجى إدخال اسم المادة والسعر بشكل صحيح', true); return; }
+  
+  try {
+    const data = { name, price, qty, note, createdAt: serverTimestamp() };
+    const docRef = await addDoc(collection(db, 'purchases'), data);
+    window._purchases.unshift({ id: docRef.id, ...data, createdAt: { toDate: () => new Date() } });
+    
+    document.getElementById('pur-name').value = '';
+    document.getElementById('pur-price').value = '';
+    document.getElementById('pur-qty').value = '';
+    document.getElementById('pur-note').value = '';
+    
+    renderPurchases();
+    showToast('✅ تم إضافة المشتريات والمصاريف بنجاح');
+  } catch(e) { showToast('حدث خطأ أثناء إضافة المشتريات', true); }
+};
+
+window.renderPurchases = () => {
+  const container = document.getElementById('purchases-list');
+  const summaryContainer = document.getElementById('purchases-summary');
+  
+  const totalSpent = window._purchases.reduce((s, p) => s + (p.price || 0), 0);
+  summaryContainer.textContent = `🛒 إجمالي المصاريف والمشتريات: ${totalSpent.toLocaleString('ar-EG')} جنيه مصري`;
+  
+  if(!window._purchases.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🛍️</div><p>لا يوجد مشتريات مسجلة حتى الآن</p></div>';
+    return;
+  }
+  
+  container.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>العنصر / البيان</th><th>المبلغ المدفوع</th><th>الكمية</th><th>ملاحظات</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+    <tbody>${window._purchases.map((p, i) => `<tr>
+      <td>${i+1}</td>
+      <td><strong>${p.name}</strong></td>
+      <td style="color:var(--danger); font-weight:700;">${(p.price||0).toLocaleString('ar-EG')} ج</td>
+      <td>${p.qty || '-'}</td>
+      <td>${p.note || '-'}</td>
+      <td><span class="date-badge">📅 ${p.createdAt ? formatDate(p.createdAt) : '-'}</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deletePurchase('${p.id}')">🗑️</button></td>
+    </tr>`).join('')}</tbody></table></div>`;
+};
+
+window.deletePurchase = async (id) => {
+  if(!confirm('هل تريد حذف مادة الشراء هذه نهائياً من السجلات؟')) return;
+  try {
+    await deleteDoc(doc(db, 'purchases', id));
+    window._purchases = window._purchases.filter(p => p.id !== id);
+    renderPurchases();
+    showToast('🗑️ تم حذف بند المشتريات');
+  } catch(e) { showToast('حدث خطأ أثناء الحذف', true); }
 };
 
 // ============ SHORTAGE ============
@@ -1093,7 +1156,7 @@ window.renderShortages = () => {
       </div>
       <div class="actions-row">
         <button class="btn btn-sm ${s.done?'btn-warning':'btn-success'}" onclick="toggleShortage('${s.id}',${!s.done})">${s.done?'↩️ إلغاء':'✅ تم'}</button>
-        <button class="btn-action-minimal delete" onclick="deleteShortage('${s.id}')">🗑️ حذف</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteShortage('${s.id}')">🗑️</button>
       </div>
     </div>`).join('');
 };
