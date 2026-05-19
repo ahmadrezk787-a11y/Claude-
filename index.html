@@ -211,7 +211,7 @@
     animation: slideUp 0.3s ease;
   }
   .modal-header {
-    padding:166px 20px; border-bottom:1px solid var(--border);
+    padding:16px 20px; border-bottom:1px solid var(--border);
     display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:white; z-index:1;
   }
   .modal-header h3 { font-size:17px; font-weight:800; color:var(--primary-dark); }
@@ -325,7 +325,7 @@
     </div>
     <div class="auth-tabs">
       <div class="auth-tab active" onclick="switchTab('login')">تسجيل الدخول</div>
-      <div class="auth-tab" onclick="switchTab('register')">إنشاء حساب للأطقم والعيادة</div>
+      <div class="auth-tab" onclick="switchTab('register')">إنشاء حساب جديد</div>
     </div>
     <div id="tab-login">
       <div class="form-group">
@@ -352,7 +352,7 @@
         <label>كلمة المرور</label>
         <input type="password" id="reg-pass" placeholder="••••••••"/>
       </div>
-      <button class="btn-primary" onclick="doRegister()">إنشاء حساب جديد</button>
+      <button class="btn-primary" onclick="doRegister()">إنشاء حساب وتفعيل فوري</button>
       <p class="auth-error" id="reg-error"></p>
     </div>
   </div>
@@ -657,7 +657,7 @@ window.doRegister = async () => {
     showToast('🎉 تم إنشاء حساب طاقم العيادة بنجاح والاتصال آمن');
   } catch(e) {
     errEl.style.display = 'block';
-    errEl.textContent = e.code === 'auth/email-already-in-use' ? 'اسم المستخدم هذا مسجل مسبقاً لموظف آخر' : 'حدث خطأ غير متوقع أثناء إعداد قاعدة البيانات';
+    errEl.textContent = e.code === 'auth/email-already-in-use' ? 'اسم المستخدم هذا مسجل مسبقاً لموظف آخر' : 'حدث خطأ في الشبكة أو في إعداد قاعدة البيانات';
   }
 };
 
@@ -721,7 +721,7 @@ window.calcFinance = () => {
   const doctorRemaining = doctor - doctorPaid;
   
   document.getElementById('calc-total').textContent = total.toLocaleString('ar-EG') + ' ج';
-  document.getElementById('calc-paid').textContent = paid.toLocaleString('ar-EG) + ' ج';
+  document.getElementById('calc-paid').textContent = paid.toLocaleString('ar-EG') + ' ج';
   document.getElementById('calc-remaining').textContent = remaining.toLocaleString('ar-EG') + ' ج';
   document.getElementById('calc-doctor').textContent = doctor.toLocaleString('ar-EG') + ' ج';
   document.getElementById('calc-doctor-remaining').textContent = doctorRemaining.toLocaleString('ar-EG') + ' ج';
@@ -1000,7 +1000,7 @@ window.renderAccounts = () => {
             <th>اسم المريض</th>
             <th>الإجراء الطبي</th>
             <th>الإجمالي</th>
-            <th>المفوع الكلي</th>
+            <th>المدفوع الكلي</th>
             <th>المتبقي الكلي</th>
             <th>حصة الطبيب</th>
             <th>التحكم</th>
