@@ -609,7 +609,6 @@ window._patients = [];
 window._shortages = [];
 window._expenses = [];
 
-// تعيين التواريخ التلقائية عند التحميل
 const now = new Date();
 const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
 document.getElementById('history-month-select').value = currentYearMonth;
@@ -718,7 +717,6 @@ window.showPage = (page) => {
   document.getElementById('sidebar-overlay').classList.remove('show');
 };
 
-// FINANCE PATIENT HINTS
 window.calcFinance = () => {
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
@@ -750,6 +748,8 @@ window.savePatient = async () => {
 
   const remaining = total - paid;
   const todayStr = new Date().toISOString().split('T')[0];
+  
+  // نضمن تسجيل الدفعة الأولى داخل مصفوفة المبيعات مع ضمان التاريخ النصي الصريح
   const list = paid > 0 ? [{ amount: paid, date: todayStr }] : [];
 
   const data = {
@@ -798,25 +798,25 @@ window.renderPatients = () => {
     </tbody></table>`;
 };
 
-// ACCOUNTS CALCULATION
+// ACCOUNTS CALCULATION - FIX MONTHLY VALUES MIGRATION
 window.renderAccounts = () => {
   const pts = window._patients;
   
-  // الحسابات العامة التراكمية الطويلة الأمد
+  // 1. الحسابات التراكمية العامة الممتدة
   const tRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
   const tPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
   const tRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
   const tDocPaidShare = tPaid * 0.6; 
-  const tDocRemainingShare = tRemaining * 0.6; // صافي حصة الدكتور من الديون
+  const tDocRemainingShare = tRemaining * 0.6; 
 
   document.getElementById('account-stats').innerHTML = `
     <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${tRevenue.toLocaleString()} ج</div><div class="stat-label">الإيرادات الكلية المتوقعة</div></div>
     <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--success)">${tPaid.toLocaleString()} ج</div><div class="stat-label">المبالغ الكلية المحصلة فعلياً</div></div>
     <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${tRemaining.toLocaleString()} ج</div><div class="stat-label">الديون المتبقية طرف الحالات</div></div>
     <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>
-    <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المؤجلة في الديون (60%)</div></div>`;
+    <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">صافي حصة الدكتور من الديون (60%)</div></div>`;
 
-  // معالجة وحساب المبالغ الشهرية التاريخية بدقة متناهية
+  // 2. الحسابات الشهرية المصلحة تماماً
   const chosenMonthStr = document.getElementById('history-month-select').value; 
   let mRevenue = 0, mPaid = 0, mRemaining = 0, mDocPaidShare = 0, mDocRemainingShare = 0;
 
@@ -824,20 +824,36 @@ window.renderAccounts = () => {
     const [year, month] = chosenMonthStr.split('-').map(Number);
     
     pts.forEach(p => {
-      const pDate = p.createdAt ? new Date(p.createdAt.seconds * 1000) : new Date();
-      // إذا كانت الحالة مسجلة في نفس الشهر والعام المختارين
-      if (pDate.getFullYear() === year && (pDate.getMonth() + 1) === month) {
+      // تفكيك دقيق ومرن لتاريخ إنشاء المريض لتجنب مشاكل الـ Timezones
+      let pDate = new Date();
+      if (p.createdAt && p.createdAt.seconds) {
+        pDate = new Date(p.createdAt.seconds * 1000);
+      } else if(p.paymentsList && p.paymentsList[0] && p.paymentsList[0].date) {
+        pDate = new Date(p.paymentsList[0].date);
+      }
+
+      const pYear = pDate.getFullYear();
+      const pMonth = pDate.getMonth() + 1;
+
+      // إذا كانت الحالة مسجلة في هذا الشهر
+      if (pYear === year && pMonth === month) {
         mRevenue += (p.total || 0);
         mRemaining += (p.remaining || 0);
       }
       
-      // جرد الدفعات المسددة خلال هذا الشهر بصرف النظر عن تاريخ تسجيل المريض الأصلي
+      // جرد ومطابقة كافة الدفعات المالية التي سددت داخل هذا الشهر بشكل مرن وصريح
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
           if(pay && pay.date) {
+            // تفكيك التاريخ النصي للدفعة لضمان قراءته بشكل سليم
             const payDate = new Date(pay.date);
-            if (payDate.getFullYear() === year && (payDate.getMonth() + 1) === month) {
-              mPaid += (parseFloat(pay.amount) || 0);
+            if (!isNaN(payDate.getTime())) {
+              const payYear = payDate.getFullYear();
+              const payMonth = payDate.getMonth() + 1;
+              
+              if (payYear === year && payMonth === month) {
+                mPaid += (parseFloat(pay.amount) || 0);
+              }
             }
           }
         });
@@ -865,7 +881,7 @@ window.renderAccounts = () => {
         <td>${p.total} ج</td>
         <td style="color:var(--success); font-weight:bold;">${p.paid} ج</td>
         <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
-        <td style="color:var(--primary); font-weight:bold;"> Ganz ${(p.paid * 0.6).toLocaleString()} ج</td>
+        <td style="color:var(--primary); font-weight:bold;">${(p.paid * 0.6).toLocaleString()} ج</td>
         <td style="color:var(--warning); font-weight:bold;">${(p.remaining * 0.6).toLocaleString()} ج</td>
         <td><button class="btn btn-edit btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 دفع</button></td>
       </tr>`).join('')}
@@ -996,7 +1012,7 @@ window.deleteExpenseRef = async (id) => {
   } catch(e) { showToast('فشل حذف المصروفات', true); }
 };
 
-// PATIENT SCRIPT MODAL OPEN
+// PATIENT MODAL ACTIONS
 window.openPatientModal = (id) => {
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
