@@ -240,7 +240,7 @@
   }
 
   /* STATS */
-  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px; }
   .stat-card {
     background:white; border-radius:14px; padding:20px; border:1px solid var(--border);
     box-shadow:0 2px 8px rgba(0,0,0,0.03);
@@ -380,6 +380,9 @@
       <div class="nav-item" onclick="showPage('accounts')">
         <span class="nav-icon">💰</span> الحسابات والملخص
       </div>
+      <div class="nav-item" onclick="showPage('expenses')">
+        <span class="nav-icon">🛒</span> مشتريات العيادة
+      </div>
       <div class="nav-item" onclick="showPage('shortage')">
         <span class="nav-icon">📋</span> قائمة النواقص
       </div>
@@ -468,8 +471,8 @@
     <div class="page" id="page-accounts">
       <div class="page-header">
         <div>
-          <h2>💰 الحسابات والمجاميع الكلية</h2>
-          <p>متابعة الحسابات العامة والمديونيات بشكل دقيق</p>
+          <h2>💰 الحسابات والملخص المالي العام</h2>
+          <p>متابعة الحسابات العامة والمديونيات وحصص الأطباء بدقة متناهية</p>
         </div>
       </div>
       
@@ -490,13 +493,54 @@
 
       <div class="card" style="border:2px solid var(--primary);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-          <div class="card-title" style="margin-bottom:0;">📅 الملخص المالي الشهري التاريخي (قابل للإضافة والتغيير)</div>
+          <div class="card-title" style="margin-bottom:0;">📅 الملخص المالي الشهري التفصيلي</div>
           <div>
-            <label style="font-size:13px; font-weight:600; margin-left:8px;">اختر الشهر والعام:</label>
+            <label style="font-size:13px; font-weight:600; margin-left:8px;">اختر الشهر والعام للحساب:</label>
             <input type="month" class="month-picker" id="history-month-select" onchange="renderAccounts()"/>
           </div>
         </div>
         <div class="stats-grid" id="account-monthly-stats"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-expenses">
+      <div class="page-header">
+        <div>
+          <h2>🛒 مشتريات ومصروفات العيادة</h2>
+          <p>سجل المواد والأدوات الطبية والمصاريف العامة للعيادة</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🛍️ تسجيل بيان شراء جديد</div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>اسم المادة / المستلزم *</label>
+            <input type="text" id="exp-name" placeholder="مثال: مقبض توربين / علبة كمامات"/>
+          </div>
+          <div class="field-group">
+            <label>تاريخ الشراء *</label>
+            <input type="date" id="exp-date"/>
+          </div>
+          <div class="field-group">
+            <label>سعر القطعة الواحد (جنيه) *</label>
+            <input type="number" id="exp-price" placeholder="0" oninput="calcExpTotal()"/>
+          </div>
+          <div class="field-group">
+            <label>عدد القطع (الكمية) *</label>
+            <input type="number" id="exp-qty" placeholder="1" value="1" oninput="calcExpTotal()"/>
+          </div>
+          <div class="field-group full">
+            <div style="background:var(--bg); padding:10px; border-radius:10px; font-weight:700; font-size:14px; color:var(--primary)">
+              💰 إجمالي التكلفة الحسابية للمشتريات: <span id="exp-total-hint">0</span> جنيه
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-success" style="margin-top:16px;" onclick="addExpense()">🛒 حفظ وإضافة للمشتريات</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📜 جرد فواتير المشتريات التراكمية</div>
+        <div class="table-wrap" id="expenses-list-wrap"></div>
       </div>
     </div>
 
@@ -563,11 +607,13 @@ const db = getFirestore(app);
 window._currentUser = null;
 window._patients = [];
 window._shortages = [];
+window._expenses = [];
 
-// تعيين الشهر الحالي تلقائياً لخانة اختيار الشهور
+// تعيين التواريخ التلقائية عند التحميل
 const now = new Date();
 const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
 document.getElementById('history-month-select').value = currentYearMonth;
+document.getElementById('exp-date').value = now.toISOString().split('T')[0];
 document.getElementById('today-date').textContent = now.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 
 onAuthStateChanged(auth, user => {
@@ -593,13 +639,17 @@ async function loadAllData() {
     const qS = query(collection(db,'shortages'), orderBy('createdAt','desc'));
     const snapS = await getDocs(qS);
     window._shortages = snapS.docs.map(d => ({id:d.id, ...d.data()}));
+
+    const qE = query(collection(db,'expenses'), orderBy('date','desc'));
+    const snapE = await getDocs(qE);
+    window._expenses = snapE.docs.map(d => ({id:d.id, ...d.data()}));
     
-    // إعادة بناء العرض الحالي للصفحة المفتوحة
     if(document.getElementById('page-patients').classList.contains('active')) renderPatients();
     if(document.getElementById('page-accounts').classList.contains('active')) renderAccounts();
+    if(document.getElementById('page-expenses').classList.contains('active')) renderExpenses();
     if(document.getElementById('page-shortage').classList.contains('active')) renderShortages();
   } catch(e) {
-    showToast('حدث خطأ أثناء تحميل البيانات', true);
+    showToast('حدث خطأ أثناء تحميل البيانات السحابية', true);
   }
 }
 
@@ -632,7 +682,7 @@ window.doRegister = async () => {
   const username = document.getElementById('reg-username').value.trim();
   const pass = document.getElementById('reg-pass').value;
   if(!name || !username || pass.length<6) {
-    showToast('برجاء إدخال بيانات صالحة (كلمة المرور لا تقل عن 6 أحرف)', true);
+    showToast('برجاء إدخال بيانات صالحة', true);
     return;
   }
   const fakeEmail = username.toLowerCase() + '@zamzam-dental.com';
@@ -656,20 +706,19 @@ window.showPage = (page) => {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   
-  // تفعيل النقر النشط في السايدبار
-  const indexMap = {'add-patient':0, 'patients':1, 'accounts':2, 'shortage':3};
+  const indexMap = {'add-patient':0, 'patients':1, 'accounts':2, 'expenses':3, 'shortage':4};
   document.querySelectorAll('.nav-item')[indexMap[page]].classList.add('active');
   
-  if(page==='patients') renderPatients();
-  if(page==='accounts') renderAccounts();
-  if(page==='shortage') renderShortages();
+  if(page=='patients') renderPatients();
+  if(page=='accounts') renderAccounts();
+  if(page=='expenses') renderExpenses();
+  if(page=='shortage') renderShortages();
   
-  // غلق القائمة في الشاشات الصغيرة بعد النقر
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('show');
 };
 
-// FINANCE HINTS
+// FINANCE PATIENT HINTS
 window.calcFinance = () => {
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
@@ -697,7 +746,7 @@ window.savePatient = async () => {
   const procedure = document.getElementById('p-procedure').value.trim();
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
-  if(!name || !phone || !procedure) { alert('برجاء تعبئة البيانات الأساسية الأجبارية'); return; }
+  if(!name || !phone || !procedure) { alert('برجاء تعبئة البيانات الأساسية الإجبارية للمريض'); return; }
 
   const remaining = total - paid;
   const todayStr = new Date().toISOString().split('T')[0];
@@ -706,8 +755,7 @@ window.savePatient = async () => {
   const data = {
     name, phone, procedure, total, paid, remaining,
     paymentsList: list,
-    notes: "",
-    xrays: [],
+    notes: "", xrays: [],
     createdAt: serverTimestamp()
   };
 
@@ -716,9 +764,7 @@ window.savePatient = async () => {
     showToast('تم حفظ الحالة بنجاح ومزامنتها سحابياً');
     clearForm();
     await loadAllData();
-  } catch(e) {
-    showToast('خطأ أثناء الحفظ', true);
-  }
+  } catch(e) { showToast('خطأ أثناء الحفظ التلقائي', true); }
 };
 
 window.clearForm = () => {
@@ -732,7 +778,7 @@ window.renderPatients = () => {
   if(s) pts = pts.filter(p => p.name.toLowerCase().includes(s) || p.phone.includes(s));
   
   if(!pts.length) {
-    document.getElementById('patients-list').innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>لا يوجد مرضى مسجلين حالياً أو يطابقون البحث</p></div>`;
+    document.getElementById('patients-list').innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>لا يوجد مرضى مطابقون للبحث</p></div>`;
     return;
   }
 
@@ -747,61 +793,68 @@ window.renderPatients = () => {
         <td>${p.paid} ج</td>
         <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${p.remaining} ج</span></td>
         <td>${p.createdAt ? new Date(p.createdAt.seconds*1000).toLocaleDateString('ar-EG') : '-'}</td>
-        <td><button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 فتح السجل</button></td>
+        <td><button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 سجل مريض</button></td>
       </tr>`).join('')}
     </tbody></table>`;
 };
 
-// ACCOUNTS CALCULATION & VIEW
+// ACCOUNTS CALCULATION
 window.renderAccounts = () => {
   const pts = window._patients;
   
-  // 1. المجموع الكلي العام التراكمي
+  // الحسابات العامة التراكمية الطويلة الأمد
   const tRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
   const tPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
   const tRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
   const tDocPaidShare = tPaid * 0.6; 
-  const tDocRemainingShare = tRemaining * 0.6;
+  const tDocRemainingShare = tRemaining * 0.6; // صافي حصة الدكتور من الديون
 
   document.getElementById('account-stats').innerHTML = `
     <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${tRevenue.toLocaleString()} ج</div><div class="stat-label">الإيرادات الكلية المتوقعة</div></div>
     <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--success)">${tPaid.toLocaleString()} ج</div><div class="stat-label">المبالغ الكلية المحصلة فعلياً</div></div>
     <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${tRemaining.toLocaleString()} ج</div><div class="stat-label">الديون المتبقية طرف الحالات</div></div>
-    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">صافي حصة الدكتور المحصلة كلياً</div></div>`;
+    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>
+    <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المؤجلة في الديون (60%)</div></div>`;
 
-  // 2. حساب الملخص المالي الشهري التاريخي الذكي القابل للتعدد والإضافة (بناءً على اختيار الشهر)
+  // معالجة وحساب المبالغ الشهرية التاريخية بدقة متناهية
   const chosenMonthStr = document.getElementById('history-month-select').value; 
-  let mRevenue = 0, mPaid = 0, mRemaining = 0, mDocPaidShare = 0;
+  let mRevenue = 0, mPaid = 0, mRemaining = 0, mDocPaidShare = 0, mDocRemainingShare = 0;
 
   if (chosenMonthStr) {
     const [year, month] = chosenMonthStr.split('-').map(Number);
+    
     pts.forEach(p => {
       const pDate = p.createdAt ? new Date(p.createdAt.seconds * 1000) : new Date();
-      // إذا كان المريض مسجل في نفس الشهر المختار
+      // إذا كانت الحالة مسجلة في نفس الشهر والعام المختارين
       if (pDate.getFullYear() === year && (pDate.getMonth() + 1) === month) {
         mRevenue += (p.total || 0);
         mRemaining += (p.remaining || 0);
       }
-      // حساب كافة المدفوعات التاريخية المنفصلة التي تمت داخل هذا الشهر بالذات
-      if (p.paymentsList) {
+      
+      // جرد الدفعات المسددة خلال هذا الشهر بصرف النظر عن تاريخ تسجيل المريض الأصلي
+      if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
-          const payDate = new Date(pay.date);
-          if (payDate.getFullYear() === year && (payDate.getMonth() + 1) === month) {
-            mPaid += (pay.amount || 0);
+          if(pay && pay.date) {
+            const payDate = new Date(pay.date);
+            if (payDate.getFullYear() === year && (payDate.getMonth() + 1) === month) {
+              mPaid += (parseFloat(pay.amount) || 0);
+            }
           }
         });
       }
     });
+    
     mDocPaidShare = mPaid * 0.6;
+    mDocRemainingShare = mRemaining * 0.6;
   }
 
   document.getElementById('account-monthly-stats').innerHTML = `
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">📊</div><div class="stat-value">${mRevenue.toLocaleString()} ج</div><div class="stat-label">إيرادات الكشوفات بالشهر المختار</div></div>
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--success)">${mPaid.toLocaleString()} ج</div><div class="stat-label">إجمالي المبالغ المحصلة خلال الشهر</div></div>
-    <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">📉</div><div class="stat-value" style="color:var(--danger)">${mRemaining.toLocaleString()} ج</div><div class="stat-label">المتبقي المسجل من حالات هذا الشهر</div></div>
-    <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${mDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من المحصل هذا الشهر</div></div>`;
+    <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">📉</div><div class="stat-value" style="color:var(--danger)">${mRemaining.toLocaleString()} ج</div><div class="stat-label">الديون المسجلة من حالات هذا الشهر</div></div>
+    <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${mDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من المحصل هذا الشهر</div></div>
+    <div class="stat-card" style="background:#f4f7f9; border: 1px dashed var(--warning);"><div class="stat-icon">⚖️</div><div class="stat-value" style="color:var(--warning)">${mDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من ديون هذا الشهر</div></div>`;
 
-  // 3. جدول الحالات الشامل مضافاً إليه خانة حصة الدكتور من المدفوع وحصته من المتبقي والمجموع الكلي بالأسفل
   document.getElementById('accounts-table').innerHTML = `<table>
     <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>حصة الدكتور من المدفوع (60%)</th><th>حصة الدكتور من المتبقي (60%)</th><th>تسجيل دفعة</th></tr></thead>
     <tbody>
@@ -812,7 +865,7 @@ window.renderAccounts = () => {
         <td>${p.total} ج</td>
         <td style="color:var(--success); font-weight:bold;">${p.paid} ج</td>
         <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
-        <td style="color:var(--primary); font-weight:bold;">${(p.paid * 0.6).toLocaleString()} ج</td>
+        <td style="color:var(--primary); font-weight:bold;"> Ganz ${(p.paid * 0.6).toLocaleString()} ج</td>
         <td style="color:var(--warning); font-weight:bold;">${(p.remaining * 0.6).toLocaleString()} ج</td>
         <td><button class="btn btn-edit btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 دفع</button></td>
       </tr>`).join('')}
@@ -827,7 +880,6 @@ window.renderAccounts = () => {
       </tr>
     </tbody></table>`;
 
-  // 4. جدول المتأخرات والديون الحالية الحية ومجموعها بالأسفل
   const debtors = pts.filter(p => p.remaining > 0);
   const totalDebtorsRem = debtors.reduce((s,p)=>s+p.remaining,0);
   const totalDebtorsDocRem = totalDebtorsRem * 0.6;
@@ -841,7 +893,7 @@ window.renderAccounts = () => {
         <td>${p.phone}</td>
         <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
         <td style="color:var(--warning); font-weight:bold;">${p.remaining * 0.6} ج</td>
-        <td><button class="btn btn-success btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 إضافة مبلّغ مالي</button></td>
+        <td><button class="btn btn-success btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 إضافة دفعة</button></td>
       </tr>`).join('')}
       <tr class="table-total-row">
         <td colspan="3">إجمالي الديون القائمة المطلوبة:</td>
@@ -849,7 +901,7 @@ window.renderAccounts = () => {
         <td style="color:var(--warning)">${totalDebtorsDocRem.toLocaleString()} ج</td>
         <td></td>
       </tr>
-    </tbody></table>` : '<div style="padding:20px; text-align:center; color:var(--success);">🎉 لا توجد أي متأخرات مالية على أي مريض حالياً!</div>';
+    </tbody></table>` : '<div style="padding:20px; text-align:center; color:var(--success);">🎉 لا توجد أي مديونيات متأخرة حالياً!</div>';
 };
 
 window.openPaymentTrigger = async (id) => {
@@ -860,7 +912,7 @@ window.openPaymentTrigger = async (id) => {
   if(!amtStr || isNaN(parseFloat(amtStr))) return;
   
   const todayStr = new Date().toISOString().split('T')[0];
-  const dateStr = prompt(`حدد تاريخ سداد الدفعة (YYYY-MM-DD):`, todayStr);
+  const dateStr = prompt(`حدد تاريخ سداد الدفعة (صيغة: YYYY-MM-DD):`, todayStr);
   if(!dateStr) return;
 
   const amt = parseFloat(amtStr);
@@ -871,17 +923,80 @@ window.openPaymentTrigger = async (id) => {
   arr.push({ amount: amt, date: dateStr });
 
   try {
-    await updateDoc(doc(db, 'patients', id), {
-      paid: updatedPaid,
-      remaining: updatedRemaining,
-      paymentsList: arr
-    });
-    showToast('تم تسجيل الدفعة النقدية بنجاح وتحديث الحسابات فوراً');
+    await updateDoc(doc(db, 'patients', id), { paid: updatedPaid, remaining: updatedRemaining, paymentsList: arr });
+    showToast('تم تسجيل الدفعة النقدية بنجاح وتحديث الحسابات');
     await loadAllData();
-    renderAccounts();
-  } catch(e) { alert('فشل تسجيل الدفعة'); }
+  } catch(e) { alert('فشل تسجيل الدفعة المالي'); }
 };
 
+// EXPENSES SCRIPTS
+window.calcExpTotal = () => {
+  const price = parseFloat(document.getElementById('exp-price').value)||0;
+  const qty = parseFloat(document.getElementById('exp-qty').value)||0;
+  document.getElementById('exp-total-hint').textContent = (price * qty).toLocaleString();
+};
+
+window.addExpense = async () => {
+  const name = document.getElementById('exp-name').value.trim();
+  const date = document.getElementById('exp-date').value;
+  const price = parseFloat(document.getElementById('exp-price').value)||0;
+  const qty = parseFloat(document.getElementById('exp-qty').value)||1;
+  
+  if(!name || !date || price <= 0) {
+    showToast('يرجى تعبئة كافة الحقول الإجبارية للمصروفات وبسعر صحيح', true);
+    return;
+  }
+  const total = price * qty;
+  
+  try {
+    await addDoc(collection(db, 'expenses'), { name, date, price, qty, total, createdAt: serverTimestamp() });
+    showToast('تم تسجيل الفاتورة والمشتريات بنجاح');
+    document.getElementById('exp-name').value = '';
+    document.getElementById('exp-price').value = '';
+    document.getElementById('exp-qty').value = '1';
+    document.getElementById('exp-total-hint').textContent = '0';
+    await loadAllData();
+  } catch(e) { showToast('خطأ أثناء حفظ المصروفات', true); }
+};
+
+window.renderExpenses = () => {
+  const exps = window._expenses;
+  if(!exps.length) {
+    document.getElementById('expenses-list-wrap').innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><p>سجل المشتريات فارغ تماماً حتى الآن.</p></div>`;
+    return;
+  }
+  
+  const totalAllExpenses = exps.reduce((s,e) => s + (e.total || 0), 0);
+
+  document.getElementById('expenses-list-wrap').innerHTML = `<table>
+    <thead><tr><th>المستلزم / البيان</th><th>التاريخ</th><th>سعر القطعة</th><th>الكمية</th><th>إجمالي الفاتورة</th><th>إجراء</th></tr></thead>
+    <tbody>
+      ${exps.map(e => `<tr>
+        <td><strong>${e.name}</strong></td>
+        <td>${e.date}</td>
+        <td>${e.price} ج</td>
+        <td>${e.qty}</td>
+        <td style="color:var(--danger); font-weight:bold;">${e.total} ج</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteExpenseRef('${e.id}')">🗑️ حذف</button></td>
+      </tr>`).join('')}
+      <tr class="table-total-row">
+        <td colspan="4">إجمالي كل مصروفات ومشتريات العيادة العامة:</td>
+        <td style="color:var(--danger); font-weight:bolder;">${totalAllExpenses.toLocaleString()} ج</td>
+        <td></td>
+      </tr>
+    </tbody></table>`;
+};
+
+window.deleteExpenseRef = async (id) => {
+  if(!confirm('هل تود حذف فاتورة الشراء هذه نهائياً؟')) return;
+  try {
+    await deleteDoc(doc(db, 'expenses', id));
+    showToast('تم حذف بيان الشراء بنجاح');
+    await loadAllData();
+  } catch(e) { showToast('فشل حذف المصروفات', true); }
+};
+
+// PATIENT SCRIPT MODAL OPEN
 window.openPatientModal = (id) => {
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
@@ -890,18 +1005,17 @@ window.openPatientModal = (id) => {
   document.getElementById('modal-body').innerHTML = `
     <div class="patient-info-grid">
       <div class="info-item"><label>رقم الهاتف</label><p>${p.phone}</p></div>
-      <div class="info-item"><label>الإجراء العلاجي الحركي</label><p>${p.procedure}</p></div>
+      <div class="info-item"><label>الإجراء العلاجي</label><p>${p.procedure}</p></div>
       <div class="info-item"><label>إجمالي التكلفة</label><p>${p.total} جنيه</p></div>
       <div class="info-item"><label>المسدد الكلي</label><p style="color:var(--success)">${p.paid} جنيه</p></div>
     </div>
-    
     <div class="section-title">📝 ملاحظات الطبيب والتشخيص العلاجي للأعراض</div>
-    <textarea class="notes-area" id="modal-notes" placeholder="اكتب التشخيص، الخطة العلاجية، أو أي ملاحظات أخرى هنا...">${p.notes || ''}</textarea>
+    <textarea class="notes-area" id="modal-notes" placeholder="ملاحظات وخطة علاج...">${p.notes || ''}</textarea>
     
-    <div class="section-title">📸 صور الأشعة السينية والملفات الرديفة (روابط خارجية)</div>
+    <div class="section-title">📸 صور الأشعة السينية والروابط</div>
     <div style="display:flex; gap:8px; margin-bottom:12px;">
       <input type="text" id="modal-xray-url" placeholder="ضع رابط صورة الأشعة هنا..." style="flex:1; padding:10px; border:2px solid var(--border); border-radius:10px; font-family:'Cairo';"/>
-      <button class="btn btn-success btn-sm" onclick="addXrayLink('${p.id}')">➕ إضافة صورة</button>
+      <button class="btn btn-success btn-sm" onclick="addXrayLink('${p.id}')">➕ إضافة</button>
     </div>
     <div class="xray-grid" id="modal-xray-grid">
       ${(p.xrays || []).map((url, idx) => `
@@ -911,12 +1025,10 @@ window.openPatientModal = (id) => {
         </div>
       `).join('')}
     </div>
-    
-    <div class="section-title">📊 تفاصيل سجل الدفعات النقدية التاريخية لهذه الحالة</div>
+    <div class="section-title">📊 تفاصيل سجل الدفعات النقدية التاريخية</div>
     <div style="background:var(--bg); border-radius:10px; padding:12px; max-height:150px; overflow-y:auto;">
-      ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة بقيمة: <strong>${py.amount} ج</strong></span><span>📅 بتاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
+      ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة: <strong>${py.amount} ج</strong></span><span>📅 تاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
     </div>
-    
     <div style="margin-top:24px; display:flex; justify-content:space-between;">
       <button class="btn btn-success" onclick="savePatientModalChanges('${p.id}')">💾 حفظ التحديثات الطبية</button>
       <button class="btn btn-danger btn-sm" onclick="deletePatient('${p.id}')">🗑️ حذف المريض نهائياً</button>
@@ -929,26 +1041,23 @@ window.savePatientModalChanges = async (id) => {
   const notes = document.getElementById('modal-notes').value.trim();
   try {
     await updateDoc(doc(db, 'patients', id), { notes });
-    showToast('تم حفظ الملاحظات والتشخيص الطبي بنجاح');
+    showToast('تم حفظ الملاحظات الطبية بنجاح');
     closeModal();
     await loadAllData();
-  } catch(e) { showToast('خطأ أثناء حفظ التعديلات', true); }
+  } catch(e) { showToast('خطأ في الحفظ والتعديل', true); }
 };
 
 window.addXrayLink = async (id) => {
   const p = window._patients.find(x => x.id === id);
   const url = document.getElementById('modal-xray-url').value.trim();
   if(!url || !p) return;
-  
   const currentXrays = p.xrays || [];
   currentXrays.push(url);
-  
   try {
     await updateDoc(doc(db, 'patients', id), { xrays: currentXrays });
     showToast('تم إضافة صورة الأشعة');
-    await loadAllData();
-    openPatientModal(id); // إعادة فتح المودال لتحديث المحتوى التفاعلي
-  } catch(e) { showToast('خطأ في الإضافة', true); }
+    await loadAllData(); openPatientModal(id);
+  } catch(e) {}
 };
 
 window.deleteXrayLink = async (id, index) => {
@@ -956,51 +1065,48 @@ window.deleteXrayLink = async (id, index) => {
   if(!p) return;
   const currentXrays = p.xrays || [];
   currentXrays.splice(index, 1);
-  
   try {
     await updateDoc(doc(db, 'patients', id), { xrays: currentXrays });
-    showToast('تم حذف صورة الأشعة');
-    await loadAllData();
-    openPatientModal(id);
-  } catch(e) { showToast('خطأ في الحذف', true); }
+    showToast('تم حذف الصورة');
+    await loadAllData(); openPatientModal(id);
+  } catch(e) {}
 };
 
 window.deletePatient = async (id) => {
-  if(!confirm('هل أنت متأكد تماماً من حذف هذه الحالة وسجلاتها المالية نهائياً؟')) return;
+  if(!confirm('هل أنت متأكد من حذف هذه الحالة نهائياً؟')) return;
   try {
     await deleteDoc(doc(db, 'patients', id));
-    closeModal();
-    showToast('تم حذف المريض بالكامل');
+    closeModal(); showToast('تم حذف المريض بنجاح');
     await loadAllData();
-  } catch(e) { showToast('خطأ في عملية الحذف', true); }
+  } catch(e) {}
 };
 
 window.closeModal = () => document.getElementById('patient-modal').classList.remove('show');
 
-// SHORTAGE LIST FUNCTIONS
+// SHORTAGE SCRIPTS
 window.addShortage = async () => {
   const name = document.getElementById('sh-name').value.trim();
   const qty = document.getElementById('sh-qty').value.trim();
   const note = document.getElementById('sh-note').value.trim();
-  if(!name) { showToast('اسم المستلزم إجباري لقائمة النواقص', true); return; }
+  if(!name) return;
   try {
-    await addDoc(collection(db,'shortages'), { name, qty, note, done: false, createdAt: serverTimestamp() });
+    await addDoc(collection(db,'shortages'), { name, qty, note, createdAt: serverTimestamp() });
     document.getElementById('sh-name').value = '';
     document.getElementById('sh-qty').value = '';
     document.getElementById('sh-note').value = '';
-    showToast('تم إضافة المستلزم إلى النواقص بنجاح');
+    showToast('تم إضافة النواقص بنجاح');
     await loadAllData();
   } catch(e) {}
 };
 
 window.renderShortages = () => {
   if(!window._shortages.length) {
-    document.getElementById('shortage-list').innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>قائمة النواقص فارغة حالياً، كل المستلزمات الطبية متوفرة!</p></div>`;
+    document.getElementById('shortage-list').innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>قائمة النواقص فارغة، العيادة مكتملة!</p></div>`;
     return;
   }
   document.getElementById('shortage-list').innerHTML = window._shortages.map(s => `
     <div class="shortage-item">
-      <div><strong>${s.name}</strong> - <span style="font-size:13px; color:var(--text-muted);">المطلوب: ${s.qty || 'غير محدد'}</span><p style="font-size:12px; color:var(--text-muted); margin-top:2px;">${s.note||''}</p></div>
+      <div><strong>${s.name}</strong> - <span style="font-size:13px; color:var(--text-muted)">المطلوب: ${s.qty || 'غير محدد'}</span><p style="font-size:12px; color:var(--text-muted); margin-top:2px;">${s.note||''}</p></div>
       <button class="btn btn-danger btn-sm" onclick="deleteShortRef('${s.id}')">🗑️ مسح</button>
     </div>
   `).join('');
@@ -1009,7 +1115,7 @@ window.renderShortages = () => {
 window.deleteShortRef = async (id) => {
   try { 
     await deleteDoc(doc(db,'shortages',id)); 
-    showToast('تم إزالة المستلزم من القائمة');
+    showToast('تم إزالة النقص');
     await loadAllData(); 
   } catch(e) {}
 };
