@@ -25,9 +25,9 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Cairo',sans-serif; background:var(--bg); color:var(--text); direction:rtl; }
 
-  /* AUTH */
+  /* AUTH SCREEN - HIDDEN BY DEFAULT TO PREVENT FLASHING */
   #auth-screen {
-    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    display: none; min-height:100vh; align-items:center; justify-content:center;
     background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #438a5e 100%);
     position:relative; overflow:hidden;
   }
@@ -64,6 +64,14 @@
     outline:none; background:white;
   }
   .form-group input:focus { border-color:var(--primary); }
+  
+  /* Remember me Checkbox */
+  .remember-me-group {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 18px; cursor: pointer; user-select: none;
+  }
+  .remember-me-group input { width: 16px; height: 16px; cursor: pointer; }
+  .remember-me-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+
   .btn-primary {
     width:100%; padding:14px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
     color:white; border:none; border-radius:12px; font-family:'Cairo',sans-serif;
@@ -72,6 +80,17 @@
   }
   .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(30,61,89,0.4); }
   .auth-error { color:var(--danger); font-size:13px; text-align:center; margin-top:12px; display:none; }
+
+  /* SPLASH LOADING */
+  #splash-loading {
+    position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  }
+  .spinner {
+    width: 50px; height: 50px; border: 5px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* APP LAYOUT */
   #app { display:none; min-height:100vh; }
@@ -187,11 +206,10 @@
   .btn-sm { padding:6px 12px; font-size:12px; border-radius:8px; }
 
   /* TABLE */
-  .table-wrap { overflow-x:auto; margin-bottom:16px; }
+  .table-wrap { overflow-x:auto; }
   table { width:100%; border-collapse:collapse; }
   thead tr { background:var(--bg); }
   tr.table-total-row { background:#eef3f7 !important; font-weight:800; border-top:2px solid var(--primary); }
-  tr.day-header-row { background: #e3faf2 !important; font-weight: 700; border-right: 4px solid var(--primary-light); }
   th { padding:12px 14px; text-align:right; font-size:13px; font-weight:700; color:var(--text-muted); border-bottom:2px solid var(--border); white-space:nowrap; }
   td { padding:12px 14px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle; white-space:nowrap; }
   tr:hover td { background:#f4f7f9; }
@@ -199,7 +217,6 @@
   .badge-green { background:#e8f6f5; color:var(--success); }
   .badge-red { background:#ffebeb; color:var(--danger); }
   .badge-orange { background:#fff3e0; color:var(--warning); }
-  .badge-blue { background:#e3f2fd; color:#0d47a1; }
 
   /* PATIENT MODAL */
   .modal-overlay {
@@ -311,6 +328,11 @@
 </head>
 <body>
 
+<div id="splash-loading">
+  <div class="spinner"></div>
+  <p style="font-family:'Cairo'; font-size:14px; color:var(--primary-dark); font-weight:bold;">جاري فتح العيادة وتجهيز الملفات الطبية...</p>
+</div>
+
 <div id="auth-screen">
   <div class="auth-box">
     <div class="auth-logo">
@@ -331,6 +353,12 @@
         <label>كلمة المرور</label>
         <input type="password" id="login-pass" placeholder="••••••••"/>
       </div>
+      
+      <div class="remember-me-group" onclick="document.getElementById('login-remember').click()">
+        <input type="checkbox" id="login-remember" checked onclick="event.stopPropagation();"/>
+        <label for="login-remember">تذكرني في هذا الجهاز دائماً</label>
+      </div>
+
       <button class="btn-primary" onclick="doLogin()">دخول</button>
       <p class="auth-error" id="login-error"></p>
     </div>
@@ -375,9 +403,6 @@
     <nav class="sidebar-nav">
       <div class="nav-item active" onclick="showPage('add-patient')">
         <span class="nav-icon">➕</span> إضافة مريض جديد
-      </div>
-      <div class="nav-item" onclick="showPage('appointments')">
-        <span class="nav-icon">📅</span> إدارة الحجوزات والمواعيد
       </div>
       <div class="nav-item" onclick="showPage('patients')">
         <span class="nav-icon">👥</span> ملف المرضى
@@ -462,48 +487,6 @@
       </div>
     </div>
 
-    <div class="page" id="page-appointments">
-      <div class="page-header">
-        <div>
-          <h2>📅 إدارة الحجوزات والمواعيد اليومية</h2>
-          <p>تسجيل وتنظيم حجوزات المرضى لتفادي الازدحام</p>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">📝 حجز موعد جديد</div>
-        <div class="form-grid">
-          <div class="field-group">
-            <label>اسم المريض المراجع *</label>
-            <input type="text" id="app-name" placeholder="الاسم ثلاثي أو ثنائي"/>
-          </div>
-          <div class="field-group">
-            <label>رقم الهاتف *</label>
-            <input type="tel" id="app-phone" placeholder="01xxxxxxxxx"/>
-          </div>
-          <div class="field-group">
-            <label>تاريخ الحجز والموعد *</label>
-            <input type="date" id="app-date"/>
-          </div>
-          <div class="field-group">
-            <label>التوقيت / الساعة *</label>
-            <input type="time" id="app-time"/>
-          </div>
-          <div class="field-group full">
-            <label>حالة الحجز البدئية</label>
-            <select id="app-status">
-              <option value="مؤكد">مؤكد</option>
-              <option value="قيد الانتظار">قيد الانتظار</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn btn-success" style="margin-top:16px;" onclick="addAppointment()">📅 إدراج الموعد بالجدول</button>
-      </div>
-      <div class="card">
-        <div class="card-title">📋 قائمة وجدول المواعيد القادمة</div>
-        <div class="table-wrap" id="appointments-list-wrap"></div>
-      </div>
-    </div>
-
     <div class="page" id="page-patients">
       <div class="page-header">
         <div>
@@ -519,24 +502,13 @@
       <div class="page-header">
         <div>
           <h2>💰 الحسابات والملخص المالي العام</h2>
-          <p>متابعة الديون القائمة، كشف الحسابات اليومية المنفصلة، والتقارير الشهرية</p>
+          <p>متابعة الحسابات العامة والمديونيات وحصص الأطباء بدقة متناهية</p>
         </div>
       </div>
-
-      <div class="card" style="border:2px solid var(--primary);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-          <div class="card-title" style="margin-bottom:0;">📅 الملخص المالي الشهري التفصيلي</div>
-          <div>
-            <label style="font-size:13px; font-weight:600; margin-left:8px;">اختر الشهر والعام للحساب:</label>
-            <input type="month" class="month-picker" id="history-month-select" onchange="renderAccounts()"/>
-          </div>
-        </div>
-        <div class="stats-grid" id="account-monthly-stats"></div>
-      </div>
-
+      
       <div class="card">
-        <div class="card-title">📆 كشف الحساب اليومي التفصيلي (منفصل لكل يوم)</div>
-        <div class="table-wrap" id="daily-accounts-wrap"></div>
+        <div class="card-title">🌍 المجموع والملخص العام التراكمي لكافة الحالات</div>
+        <div class="stats-grid" id="account-stats"></div>
       </div>
 
       <div class="card">
@@ -548,10 +520,16 @@
         <div class="card-title">⚠️ جدول الديون والمتأخرات الحالية على المرضى</div>
         <div class="table-wrap" id="debtors-table"></div>
       </div>
-      
-      <div class="card" style="background: #eef3f7;">
-        <div class="card-title">🌍 المجموع والملخص العام التراكمي لكافة الحالات (تاريخي)</div>
-        <div class="stats-grid" id="account-stats"></div>
+
+      <div class="card" style="border:2px solid var(--primary);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+          <div class="card-title" style="margin-bottom:0;">📅 الملخص المالي الشهري التفصيلي</div>
+          <div>
+            <label style="font-size:13px; font-weight:600; margin-left:8px;">اختر الشهر والعام للحساب:</label>
+            <input type="month" class="month-picker" id="history-month-select" onchange="renderAccounts()"/>
+          </div>
+        </div>
+        <div class="stats-grid" id="account-monthly-stats"></div>
       </div>
     </div>
 
@@ -639,7 +617,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -660,16 +638,18 @@ window._currentUser = null;
 window._patients = [];
 window._shortages = [];
 window._expenses = [];
-window._appointments = [];
 
 const now = new Date();
 const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
 document.getElementById('history-month-select').value = currentYearMonth;
 document.getElementById('exp-date').value = now.toISOString().split('T')[0];
-document.getElementById('app-date').value = now.toISOString().split('T')[0];
 document.getElementById('today-date').textContent = now.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 
+// مراقبة الدخول التلقائي المستمر والذكي
 onAuthStateChanged(auth, user => {
+  // إخفاء الـ Splash screen فوراً بعد اكتمال الفحص بنجاح
+  document.getElementById('splash-loading').style.display = 'none';
+
   if (user) {
     window._currentUser = user;
     document.getElementById('auth-screen').style.display = 'none';
@@ -696,16 +676,11 @@ async function loadAllData() {
     const qE = query(collection(db,'expenses'), orderBy('date','desc'));
     const snapE = await getDocs(qE);
     window._expenses = snapE.docs.map(d => ({id:d.id, ...d.data()}));
-
-    const qA = query(collection(db,'appointments'), orderBy('date','asc'), orderBy('time','asc'));
-    const snapA = await getDocs(qA);
-    window._appointments = snapA.docs.map(d => ({id:d.id, ...d.data()}));
     
     if(document.getElementById('page-patients').classList.contains('active')) renderPatients();
     if(document.getElementById('page-accounts').classList.contains('active')) renderAccounts();
     if(document.getElementById('page-expenses').classList.contains('active')) renderExpenses();
     if(document.getElementById('page-shortage').classList.contains('active')) renderShortages();
-    if(document.getElementById('page-appointments').classList.contains('active')) renderAppointments();
   } catch(e) {
     showToast('حدث خطأ أثناء تحميل البيانات السحابية', true);
   }
@@ -722,12 +697,20 @@ window.switchTab = (tab) => {
   document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
 };
 
+// كود تسجيل الدخول المدعوم بميزة تحديد الجلسة المستمرة (Remember Me)
 window.doLogin = async () => {
   const username = document.getElementById('login-username').value.trim();
   const pass = document.getElementById('login-pass').value;
+  const rememberMe = document.getElementById('login-remember').checked;
+
   if(!username || !pass) return;
   const fakeEmail = username.toLowerCase() + '@zamzam-dental.com';
+  
   try { 
+    // ضبط نوع حفظ الجلسة على المتصفح بناء على اختيار زر تذكرني
+    const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+    await setPersistence(auth, persistenceType);
+
     await signInWithEmailAndPassword(auth, fakeEmail, pass); 
     showToast('تم تسجيل الدخول بنجاح');
   } catch(e) { 
@@ -755,8 +738,10 @@ window.doRegister = async () => {
 };
 
 window.doLogout = () => {
-  signOut(auth);
-  showToast('تم تسجيل الخروج');
+  if (confirm('هل تود تسجيل الخروج بالفعل؟ (ستحتاج لكتابة الباسورد مجدداً في المرة القادمة)')) {
+    signOut(auth);
+    showToast('تم تسجيل الخروج');
+  }
 };
 
 window.showPage = (page) => {
@@ -764,14 +749,13 @@ window.showPage = (page) => {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   
-  const indexMap = {'add-patient':0, 'appointments':1, 'patients':2, 'accounts':3, 'expenses':4, 'shortage':5};
+  const indexMap = {'add-patient':0, 'patients':1, 'accounts':2, 'expenses':3, 'shortage':4};
   document.querySelectorAll('.nav-item')[indexMap[page]].classList.add('active');
   
   if(page=='patients') renderPatients();
   if(page=='accounts') renderAccounts();
   if(page=='expenses') renderExpenses();
   if(page=='shortage') renderShortages();
-  if(page=='appointments') renderAppointments();
   
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('show');
@@ -842,7 +826,7 @@ window.renderPatients = () => {
   }
 
   document.getElementById('patients-list').innerHTML = `<table>
-    <thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>الملف الطبي</th></tr></thead>
+    <thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>تاريخ التسجيل</th><th>الملف الطبي</th></tr></thead>
     <tbody>
       ${pts.map(p => `<tr>
         <td><strong>${p.name}</strong></td>
@@ -851,16 +835,15 @@ window.renderPatients = () => {
         <td>${p.total} ج</td>
         <td>${p.paid} ج</td>
         <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${p.remaining} ج</span></td>
+        <td>${p.createdAt ? new Date(p.createdAt.seconds*1000).toLocaleDateString('ar-EG') : '-'}</td>
         <td><button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 سجل مريض</button></td>
       </tr>`).join('')}
     </tbody></table>`;
 };
 
-// ACCOUNTS CALCULATION - UPGRADED TO SUPPORT SEPARATE DAYS AND IMMEDIATE LOCAL FALLBACKS
 window.renderAccounts = () => {
   const pts = window._patients;
   
-  // 1. الحسابات التراكمية العامة (تاريخي)
   const tRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
   const tPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
   const tRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
@@ -871,14 +854,11 @@ window.renderAccounts = () => {
     <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">${tRevenue.toLocaleString()} ج</div><div class="stat-label">الإيرادات الكلية المتوقعة</div></div>
     <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--success)">${tPaid.toLocaleString()} ج</div><div class="stat-label">المبالغ الكلية المحصلة فعلياً</div></div>
     <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${tRemaining.toLocaleString()} ج</div><div class="stat-label">الديون المتبقية طرف الحالات</div></div>
-    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>`;
+    <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>
+    <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">صافي حصة الدكتور من الديون (60%)</div></div>`;
 
-  // 2. الحسابات الشهرية المصلحة تماماً بالاعتماد التام على تاريخ محلي فوري عند غياب حقول السيرفر
   const chosenMonthStr = document.getElementById('history-month-select').value; 
   let mRevenue = 0, mPaid = 0, mRemaining = 0, mDocPaidShare = 0, mDocRemainingShare = 0;
-
-  // هيكل لتجميع الحسابات والمدفوعات اليومية المنفصلة
-  const dailyData = {};
 
   if (chosenMonthStr) {
     const [year, month] = chosenMonthStr.split('-').map(Number);
@@ -887,20 +867,18 @@ window.renderAccounts = () => {
       let pDate = new Date();
       if (p.createdAt && p.createdAt.seconds) {
         pDate = new Date(p.createdAt.seconds * 1000);
-      } else if (p.paymentsList && p.paymentsList[0] && p.paymentsList[0].date) {
+      } else if(p.paymentsList && p.paymentsList[0] && p.paymentsList[0].date) {
         pDate = new Date(p.paymentsList[0].date);
       }
 
       const pYear = pDate.getFullYear();
       const pMonth = pDate.getMonth() + 1;
 
-      // فلترة الحالات التابعة للشهر المختار
       if (pYear === year && pMonth === month) {
         mRevenue += (p.total || 0);
         mRemaining += (p.remaining || 0);
       }
       
-      // جرد ومطابقة كافة الدفعات المالية التي سددت داخل هذا الشهر
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
           if(pay && pay.date) {
@@ -908,23 +886,9 @@ window.renderAccounts = () => {
             if (!isNaN(payDate.getTime())) {
               const payYear = payDate.getFullYear();
               const payMonth = payDate.getMonth() + 1;
-              const dateKey = pay.date; // الصيغة نصياً YYYY-MM-DD
               
               if (payYear === year && payMonth === month) {
-                const amt = parseFloat(pay.amount) || 0;
-                mPaid += amt;
-
-                // تجميع حسابات الأيام المنفصلة
-                if (!dailyData[dateKey]) {
-                  dailyData[dateKey] = { collected: 0, docShare: 0, transactions: [] };
-                }
-                dailyData[dateKey].collected += amt;
-                dailyData[dateKey].docShare += (amt * 0.6);
-                dailyData[dateKey].transactions.push({
-                  patientName: p.name,
-                  procedure: p.procedure,
-                  amount: amt
-                });
+                mPaid += (parseFloat(pay.amount) || 0);
               }
             }
           }
@@ -936,48 +900,13 @@ window.renderAccounts = () => {
     mDocRemainingShare = mRemaining * 0.6;
   }
 
-  // عرض بطاقات الإحصائيات الشهرية
   document.getElementById('account-monthly-stats').innerHTML = `
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">📊</div><div class="stat-value">${mRevenue.toLocaleString()} ج</div><div class="stat-label">إيرادات الكشوفات بالشهر المختار</div></div>
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--success)">${mPaid.toLocaleString()} ج</div><div class="stat-label">إجمالي المبالغ المحصلة خلال الشهر</div></div>
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">📉</div><div class="stat-value" style="color:var(--danger)">${mRemaining.toLocaleString()} ج</div><div class="stat-label">الديون المسجلة من حالات هذا الشهر</div></div>
-    <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${mDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من المحصل هذا الشهر</div></div>`;
+    <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${mDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من المحصل هذا الشهر</div></div>
+    <div class="stat-card" style="background:#f4f7f9; border: 1px dashed var(--warning);"><div class="stat-icon">⚖️</div><div class="stat-value" style="color:var(--warning)">${mDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من ديون هذا الشهر</div></div>`;
 
-  // بناء جدول كشف الحساب اليومي المنفصل
-  const sortedDays = Object.keys(dailyData).sort((a, b) => new Date(b) - new Date(a));
-  if (sortedDays.length > 0) {
-    let dailyHtml = `<table>
-      <thead><tr><th>التاريخ / اليوم</th><th>اسم المريض</th><th>الإجراء الطبي</th><th>المبلغ المحصل</th><th>حصة الطبيب (60%)</th></tr></thead>
-      <tbody>`;
-    
-    sortedDays.forEach(day => {
-      const dayInfo = dailyData[day];
-      // سطر رأس اليوم وعرض الإجمالي الخاص به بشكل منفصل تماماً
-      dailyHtml += `<tr class="day-header-row">
-        <td colspan="3">📅 كشف حساب يوم: <strong>${day}</strong></td>
-        <td style="color:var(--success)">إجمالي اليوم: ${dayInfo.collected.toLocaleString()} ج</td>
-        <td style="color:var(--primary)">حصة الدكتور: ${dayInfo.docShare.toLocaleString()} tracking ج</td>
-      </tr>`;
-      
-      // تفاصيل حركات اليوم
-      dayInfo.transactions.forEach(t => {
-        dailyHtml += `<tr>
-          <td>⬅️</td>
-          <td>${t.patientName}</td>
-          <td><span class="badge badge-blue">${t.procedure}</span></td>
-          <td style="color:var(--success)">${t.amount.toLocaleString()} ج</td>
-          <td style="color:var(--primary)">${(t.amount * 0.6).toLocaleString()} ج</td>
-        </tr>`;
-      });
-    });
-    
-    dailyHtml += `</tbody></table>`;
-    document.getElementById('daily-accounts-wrap').innerHTML = dailyHtml;
-  } else {
-    document.getElementById('daily-accounts-wrap').innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted);">لا توجد متحصلات أو دفعات مسجلة لهذا الشهر حتى الآن.</div>`;
-  }
-
-  // عرض جدول المرضى والمدفوعات الكلية
   document.getElementById('accounts-table').innerHTML = `<table>
     <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>حصة الدكتور من المدفوع (60%)</th><th>حصة الدكتور من المتبقي (60%)</th><th>تسجيل دفعة</th></tr></thead>
     <tbody>
@@ -1047,81 +976,11 @@ window.openPaymentTrigger = async (id) => {
 
   try {
     await updateDoc(doc(db, 'patients', id), { paid: updatedPaid, remaining: updatedRemaining, paymentsList: arr });
-    showToast('تم تسجيل الدفعة النقدية بنجاح وتحديث الحسابات الأيام');
+    showToast('تم تسجيل الدفعة النقدية بنجاح وتحديث الحسابات');
     await loadAllData();
   } catch(e) { alert('فشل تسجيل الدفعة المالي'); }
 };
 
-// APPOINTMENTS SYSTEM MANAGEMENT (NEW)
-window.addAppointment = async () => {
-  const name = document.getElementById('app-name').value.trim();
-  const phone = document.getElementById('app-phone').value.trim();
-  const date = document.getElementById('app-date').value;
-  const time = document.getElementById('app-time').value;
-  const status = document.getElementById('app-status').value;
-
-  if(!name || !phone || !date || !time) {
-    showToast('الرجاء إدخال بيانات حجز الموعد كاملة', true);
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, 'appointments'), { name, phone, date, time, status, createdAt: serverTimestamp() });
-    showToast('تم حجز وإدراج الموعد للمريض بنجاح');
-    document.getElementById('app-name').value = '';
-    document.getElementById('app-phone').value = '';
-    await loadAllData();
-  } catch(e) { showToast('خطأ في الاتصال بقاعدة البيانات المواعيد', true); }
-};
-
-window.renderAppointments = () => {
-  const apps = window._appointments;
-  if(!apps.length) {
-    document.getElementById('appointments-list-wrap').innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><p>لا توجد مواعيد أو حجوزات مسجلة حالياً.</p></div>`;
-    return;
-  }
-
-  document.getElementById('appointments-list-wrap').innerHTML = `<table>
-    <thead><tr><th>اسم المريض</th><th>رقم الهاتف</th><th>تاريخ الحجز</th><th>الساعة</th><th>الحالة الحالية</th><th>تغيير الحالة</th><th>إجراء</th></tr></thead>
-    <tbody>
-      ${apps.map(a => `<tr>
-        <td><strong>${a.name}</strong></td>
-        <td>${a.phone}</td>
-        <td><span class="badge badge-blue">${a.date}</span></td>
-        <td><strong>${a.time}</strong></td>
-        <td><span class="badge ${a.status==='تم الحضور'?'badge-green':(a.status==='قيد الانتظار'?'badge-orange':'badge-blue')}">${a.status}</span></td>
-        <td>
-          <select onchange="updateAppointmentStatus('${a.id}', this.value)" style="padding:4px; border-radius:6px; font-family:'Cairo';">
-            <option value="">-- اختر لتغيير الحالة --</option>
-            <option value="مؤكد" ${a.status==='مؤكد'?'selected':''}>مؤكد</option>
-            <option value="قيد الانتظار" ${a.status==='قيد الانتظار'?'selected':''}>قيد الانتظار</option>
-            <option value="تم الحضور" ${a.status==='تم الحضور'?'selected':''}>تم الحضور</option>
-          </select>
-        </td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteAppointmentRef('${a.id}')">🗑️ إلغاء</button></td>
-      </tr>`).join('')}
-    </tbody></table>`;
-};
-
-window.updateAppointmentStatus = async (id, newStatus) => {
-  if(!newStatus) return;
-  try {
-    await updateDoc(doc(db, 'appointments', id), { status: newStatus });
-    showToast('تم تحديث حالة موعد المريض بنجاح');
-    await loadAllData();
-  } catch(e) {}
-};
-
-window.deleteAppointmentRef = async (id) => {
-  if(!confirm('هل تود إلغاء وحذف هذا الحجز نهائياً؟')) return;
-  try {
-    await deleteDoc(doc(db, 'appointments', id));
-    showToast('تم إلغاء الحجز من العيادة');
-    await loadAllData();
-  } catch(e) {}
-};
-
-// EXPENSES SCRIPTS
 window.calcExpTotal = () => {
   const price = parseFloat(document.getElementById('exp-price').value)||0;
   const qty = parseFloat(document.getElementById('exp-qty').value)||0;
@@ -1188,7 +1047,6 @@ window.deleteExpenseRef = async (id) => {
   } catch(e) { showToast('فشل حذف المصروفات', true); }
 };
 
-// PATIENT MODAL ACTIONS
 window.openPatientModal = (id) => {
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
@@ -1239,9 +1097,42 @@ window.savePatientModalChanges = async (id) => {
   } catch(e) { showToast('خطأ في الحفظ والتعديل', true); }
 };
 
+window.addXrayLink = async (id) => {
+  const p = window._patients.find(x => x.id === id);
+  const url = document.getElementById('modal-xray-url').value.trim();
+  if(!url || !p) return;
+  const currentXrays = p.xrays || [];
+  currentXrays.push(url);
+  try {
+    await updateDoc(doc(db, 'patients', id), { xrays: currentXrays });
+    showToast('تم إضافة صورة الأشعة');
+    await loadAllData(); openPatientModal(id);
+  } catch(e) {}
+};
+
+window.deleteXrayLink = async (id, index) => {
+  const p = window._patients.find(x => x.id === id);
+  if(!p) return;
+  const currentXrays = p.xrays || [];
+  currentXrays.splice(index, 1);
+  try {
+    await updateDoc(doc(db, 'patients', id), { xrays: currentXrays });
+    showToast('تم حذف الصورة');
+    await loadAllData(); openPatientModal(id);
+  } catch(e) {}
+};
+
+window.deletePatient = async (id) => {
+  if(!confirm('هل أنت متأكد من حذف هذه الحالة نهائياً؟')) return;
+  try {
+    await deleteDoc(doc(db, 'patients', id));
+    closeModal(); showToast('تم حذف المريض بنجاح');
+    await loadAllData();
+  } catch(e) {}
+};
+
 window.closeModal = () => document.getElementById('patient-modal').classList.remove('show');
 
-// SHORTAGE SCRIPTS
 window.addShortage = async () => {
   const name = document.getElementById('sh-name').value.trim();
   const qty = document.getElementById('sh-qty').value.trim();
@@ -1278,7 +1169,6 @@ window.deleteShortRef = async (id) => {
   } catch(e) {}
 };
 
-// TOAST SYSTEM
 function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
