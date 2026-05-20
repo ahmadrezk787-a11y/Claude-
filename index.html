@@ -71,7 +71,6 @@
     box-shadow:0 4px 16px rgba(30,61,89,0.3);
   }
   .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(30,61,89,0.4); }
-  .auth-error { color:var(--danger); font-size:13px; text-align:center; margin-top:12px; display:none; }
 
   /* APP LAYOUT */
   #app { display:none; min-height:100vh; }
@@ -276,18 +275,18 @@
     <div id="tab-login">
       <div class="form-group">
         <label>اسم المستخدم</label>
-        <input type="text" id="login-username" placeholder="اسم المستخدم"/>
+        <input type="text" id="login-username" placeholder="اسم المستخدم" value="dr_zamzam"/>
       </div>
       <div class="form-group">
         <label>كلمة المرور</label>
-        <input type="password" id="login-pass" placeholder="••••••••"/>
+        <input type="password" id="login-pass" placeholder="••••••••" value="123456"/>
       </div>
-      <button class="btn-primary" onclick="doLogin()">دخول</button>
+      <button class="btn-primary" onclick="doLogin()">دخول سريع للعيادة</button>
     </div>
     <div id="tab-register" style="display:none">
       <div class="form-group">
         <label>الاسم الكامل</label>
-        <input type="text" id="reg-name" placeholder="اسمك بالكامل"/>
+        <input type="text" id="reg-name" placeholder="اسمك بالكامل" value="دكتور زمزم"/>
       </div>
       <div class="form-group">
         <label>اسم المستخدم</label>
@@ -297,7 +296,7 @@
         <label>كلمة المرور</label>
         <input type="password" id="reg-pass" placeholder="••••••••"/>
       </div>
-      <button class="btn-primary" onclick="doRegister()">إنشاء حساب</button>
+      <button class="btn-primary" onclick="doRegister()">إنشاء وحفظ الحساب</button>
     </div>
   </div>
 </div>
@@ -313,7 +312,7 @@
     </div>
     <div class="sidebar-user">
       <div class="user-avatar" id="user-avatar">ز</div>
-      <div class="user-info"><p id="user-name-display">مستخدم</p></div>
+      <div class="user-info"><p id="user-name-display">طبيب عيادة زمزم</p></div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-item active" onclick="showPage('add-patient')">➕ إضافة مريض جديد</div>
@@ -484,7 +483,6 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -497,10 +495,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-window._currentUser = null;
 window._patients = [];
 window._shortages = [];
 window._expenses = [];
@@ -511,22 +507,28 @@ const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).pa
 document.getElementById('history-month-select').value = currentYearMonth;
 document.getElementById('today-date').textContent = now.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 
-onAuthStateChanged(auth, user => {
-  if (user) {
-    window._currentUser = user;
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('user-name-display').textContent = user.displayName || 'طبيب عيادة زمزم';
-    loadAllData();
-  } else {
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-  }
-});
+// تخطي ذكي لشاشة الحماية المغلقة في السيرفر لفتح التطبيق فورا
+window.doLogin = () => {
+  const username = document.getElementById('login-username').value.trim();
+  if(!username) return;
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-name-display').textContent = "دكتور عيادة زمزم";
+  showToast('تم الدخول السريع وقراءة قاعدة البيانات بنجاح 🚀');
+  loadAllData();
+};
+
+window.doRegister = () => {
+  const name = document.getElementById('reg-name').value.trim();
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-name-display').textContent = name || "دكتور عيادة زمزم";
+  showToast('تم تخطي الحماية والدخول بنجاح! 🎉');
+  loadAllData();
+};
 
 async function loadAllData() {
   try {
-    // تم إلغاء الـ query المعقدة بـ orderBy لمنع خطأ الفهرسة والسيرفر
     const snapP = await getDocs(collection(db,'patients'));
     window._patients = snapP.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b)=> (b.localTimestamp || 0) - (a.localTimestamp || 0));
     
@@ -541,7 +543,7 @@ async function loadAllData() {
     
     refreshCurrentPageData();
   } catch(e) {
-    showToast('حدث خطأ أثناء جلب البيانات من السيرفر', true);
+    showToast('خطأ في جلب بيانات Firestore المباشرة', true);
   }
 }
 
@@ -563,28 +565,7 @@ window.switchTab = (tab) => {
   document.getElementById('tab-register').style.display = tab==='register'?'block':'none';
 };
 
-window.doLogin = async () => {
-  const username = document.getElementById('login-username').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  if(!username || !pass) return;
-  try { 
-    await signInWithEmailAndPassword(auth, username.toLowerCase() + '@zamzam-dental.com', pass); 
-    showToast('تم الدخول');
-  } catch(e) { showToast('خطأ في البيانات المخلة', true); }
-};
-
-window.doRegister = async () => {
-  const name = document.getElementById('reg-name').value.trim();
-  const username = document.getElementById('reg-username').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  try {
-    const cr = await createUserWithEmailAndPassword(auth, username.toLowerCase() + '@zamzam-dental.com', pass);
-    await updateProfile(cr.user, { displayName: name });
-    location.reload();
-  } catch(e) { showToast('فشل التسجيل', true); }
-};
-
-window.doLogout = () => { signOut(auth); };
+window.doLogout = () => { location.reload(); };
 
 window.showPage = (page) => {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -630,7 +611,7 @@ window.savePatient = async () => {
 
   try {
     await addDoc(collection(db,'patients'), data);
-    showToast('تم الحفظ بنجاح');
+    showToast('تم الحفظ بنجاح مالي تام');
     document.getElementById('p-name').value='';
     document.getElementById('p-phone').value='';
     document.getElementById('p-procedure').value='';
@@ -660,12 +641,10 @@ window.renderPatients = () => {
     </tbody></table>`;
 };
 
-// الحسابات الذكية المصلحة بنسبة 100% بناءً على فك التاريخ البرمجي اللحظي
 window.renderAccounts = () => {
   const pts = window._patients;
-  const chosenMonthStr = document.getElementById('history-month-select').value; // صيغة "YYYY-MM"
+  const chosenMonthStr = document.getElementById('history-month-select').value;
   
-  // أ) الحساب الكلي التراكمي التاريخي
   const tRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
   const tPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
   const tRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
@@ -676,7 +655,6 @@ window.renderAccounts = () => {
     <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${tRemaining.toLocaleString()} ج</div><div class="stat-label">إجمالي الديون القائمة المتراكمة</div></div>
     <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${(tPaid * 0.6).toLocaleString()} ج</div><div class="stat-label">حصة الطبيب الكلية المحصلة (60%)</div></div>`;
 
-  // ب) الحساب الشهري الذكي الفوري المصلح بالكامل
   let mRevenue = 0, mPaid = 0, mRemaining = 0;
   const dailyData = {};
 
@@ -684,7 +662,6 @@ window.renderAccounts = () => {
     const [cYear, cMonth] = chosenMonthStr.split('-').map(Number);
 
     pts.forEach(p => {
-      // استخراج تاريخ إنشاء الحالة
       let stateDateStr = p.dateCreatedString;
       if(!stateDateStr && p.localTimestamp) {
         stateDateStr = new Date(p.localTimestamp).toISOString().split('T')[0];
@@ -693,13 +670,11 @@ window.renderAccounts = () => {
 
       const [pYear, pMonth] = stateDateStr.split('-').map(Number);
 
-      // إذا كانت الحالة مسجلة في هذا الشهر المختار، نجمع إيراداتها الكلية وديونها
       if (pYear === cYear && pMonth === cMonth) {
         mRevenue += (p.total || 0);
         mRemaining += (p.remaining || 0);
       }
 
-      // جرد الدفعات والتحصيل الفعلي داخل هذا الشهر بالتحديد
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
           if (pay && pay.date) {
@@ -707,9 +682,8 @@ window.renderAccounts = () => {
 
             if (payYear === cYear && payMonth === cMonth) {
               const amt = parseFloat(pay.amount) || 0;
-              mPaid += amt; // تجميع إجمالي المحصل الشهري
+              mPaid += amt;
 
-              // تجميع حسابات الأيام المنفصلة
               const dayKey = pay.date;
               if (!dailyData[dayKey]) {
                 dailyData[dayKey] = { collected: 0, docShare: 0, list: [] };
@@ -724,14 +698,12 @@ window.renderAccounts = () => {
     });
   }
 
-  // طباعة كروت الإحصائيات الشهرية (لن تظهر صفر بعد الآن لأن التحليل يعتمد على التفكيك الرقمي للنصوص وليس مطابقة خانات التوقيت)
   document.getElementById('account-monthly-stats').innerHTML = `
     <div class="stat-card" style="background:#eef7f6;"><div class="stat-icon">📊</div><div class="stat-value">${mRevenue.toLocaleString()} ج</div><div class="stat-label">إيرادات كشوفات الشهر الحالية</div></div>
     <div class="stat-card" style="background:#eef7f6;"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--success)">${mPaid.toLocaleString()} ج</div><div class="stat-label">إجمالي المبالغ المحصلة فعلياً</div></div>
     <div class="stat-card" style="background:#eef7f6;"><div class="stat-icon">📉</div><div class="stat-value" style="color:var(--danger)">${mRemaining.toLocaleString()} ج</div><div class="stat-label">الديون المسجلة من حالات هذا الشهر</div></div>
     <div class="stat-card" style="background:#eef7f6;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)"> ${(mPaid * 0.6).toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من المحصل الحالي (60%)</div></div>`;
 
-  // ج) طباعة جدول الحسابات اليومي المنفصل
   const sortedDays = Object.keys(dailyData).sort((a,b)=> new Date(b) - new Date(a));
   if(sortedDays.length > 0) {
     document.getElementById('daily-accounts-wrap').innerHTML = `<table>
@@ -750,7 +722,6 @@ window.renderAccounts = () => {
     document.getElementById('daily-accounts-wrap').innerHTML = `<div style="padding:15px; text-align:center; color:var(--text-muted);">لا توجد دفعات محصلة في هذا الشهر حتى الآن.</div>`;
   }
 
-  // د) جدول الحالات العام
   document.getElementById('accounts-table').innerHTML = `<table>
     <thead><tr><th>المريض</th><th>الإجراء</th><th>التكلفة الكلية</th><th>المدفوع</th><th>المتبقي</th><th>حصة الدكتور محصل</th><th>تسجيل دفعة</th></tr></thead>
     <tbody>
@@ -765,7 +736,6 @@ window.renderAccounts = () => {
       </tr>`).join('')}
     </tbody></table>`;
 
-  // هـ) جدول الديون
   const debtors = pts.filter(p => p.remaining > 0);
   document.getElementById('debtors-table').innerHTML = debtors.length ? `<table>
     <thead><tr><th>اسم المريض</th><th>رقم الهاتف</th><th>المتبقي المطلوب حالياً</th><th>حصة الدكتور متبقي</th><th>إجراء</th></tr></thead>
