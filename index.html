@@ -25,75 +25,8 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Cairo',sans-serif; background:var(--bg); color:var(--text); direction:rtl; }
 
-  /* AUTH SCREEN - HIDDEN BY DEFAULT TO PREVENT FLASHING */
-  #auth-screen {
-    display: none; min-height:100vh; align-items:center; justify-content:center;
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #438a5e 100%);
-    position:relative; overflow:hidden;
-  }
-  #auth-screen::before {
-    content:''; position:absolute; inset:0;
-    background: radial-gradient(circle at 20% 80%, rgba(255,110,64,0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%);
-  }
-  .auth-box {
-    background:white; border-radius:24px; padding:48px 40px; width:100%; max-width:420px;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.25); position:relative; z-index:1;
-    animation: slideUp 0.5s ease;
-  }
-  @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
-  .auth-logo { text-align:center; margin-bottom:32px; }
-  .auth-logo .logo-icon {
-    width:72px; height:72px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-    border-radius:20px; display:flex; align-items:center; justify-content:center;
-    font-size:32px; margin:0 auto 12px; box-shadow:0 8px 24px rgba(30,61,89,0.3);
-  }
-  .auth-logo h1 { font-size:22px; font-weight:800; color:var(--primary); }
-  .auth-logo p { font-size:13px; color:var(--text-muted); margin-top:4px; }
-  .auth-tabs { display:flex; background:#e1e8ed; border-radius:12px; padding:4px; margin-bottom:28px; }
-  .auth-tab {
-    flex:1; padding:10px; text-align:center; border-radius:10px; cursor:pointer;
-    font-size:14px; font-weight:600; transition:all 0.3s; color:var(--text-muted);
-  }
-  .auth-tab.active { background:white; color:var(--primary); box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-  .form-group { margin-bottom:18px; }
-  .form-group label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; }
-  .form-group input {
-    width:100%; padding:12px 16px; border:2px solid var(--border); border-radius:12px;
-    font-family:'Cairo',sans-serif; font-size:14px; color:var(--text); transition:border 0.2s;
-    outline:none; background:white;
-  }
-  .form-group input:focus { border-color:var(--primary); }
-  
-  /* Remember me Checkbox */
-  .remember-me-group {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 18px; cursor: pointer; user-select: none;
-  }
-  .remember-me-group input { width: 16px; height: 16px; cursor: pointer; }
-  .remember-me-group label { font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
-
-  .btn-primary {
-    width:100%; padding:14px; background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-    color:white; border:none; border-radius:12px; font-family:'Cairo',sans-serif;
-    font-size:15px; font-weight:700; cursor:pointer; transition:all 0.2s;
-    box-shadow:0 4px 16px rgba(30,61,89,0.3);
-  }
-  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(30,61,89,0.4); }
-  .auth-error { color:var(--danger); font-size:13px; text-align:center; margin-top:12px; display:none; }
-
-  /* SPLASH LOADING */
-  #splash-loading {
-    position: fixed; inset: 0; background: var(--bg); z-index: 9999;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
-  }
-  .spinner {
-    width: 50px; height: 50px; border: 5px solid var(--border); border-top-color: var(--primary);
-    border-radius: 50%; animation: spin 1s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
   /* APP LAYOUT */
-  #app { display:none; min-height:100vh; }
+  #app { display:block; min-height:100vh; }
   .sidebar {
     position:fixed; top:0; right:0; width:var(--sidebar-w); height:100vh;
     background:linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
@@ -129,13 +62,6 @@
   .nav-item:hover { background:rgba(255,255,255,0.1); color:white; }
   .nav-item.active { background:rgba(255,255,255,0.2); color:white; }
   .nav-item .nav-icon { font-size:18px; width:24px; text-align:center; }
-  .sidebar-footer { padding:16px 20px; border-top:1px solid rgba(255,255,255,0.1); }
-  .btn-logout {
-    width:100%; padding:10px; background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8);
-    border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer;
-    font-family:'Cairo',sans-serif; font-size:13px; font-weight:600; transition:all 0.2s;
-  }
-  .btn-logout:hover { background:rgba(224,62,62,0.3); color:white; }
 
   .main-content {
     margin-right:var(--sidebar-w); padding:28px; min-height:100vh;
@@ -328,59 +254,6 @@
 </head>
 <body>
 
-<div id="splash-loading">
-  <div class="spinner"></div>
-  <p style="font-family:'Cairo'; font-size:14px; color:var(--primary-dark); font-weight:bold;">جاري فتح العيادة وتجهيز الملفات الطبية...</p>
-</div>
-
-<div id="auth-screen">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div class="logo-icon">🦷</div>
-      <h1>عيادة زمزم لطب الأسنان</h1>
-      <p>نظام الإدارة الطبية</p>
-    </div>
-    <div class="auth-tabs">
-      <div class="auth-tab active" onclick="switchTab('login')">تسجيل الدخول</div>
-      <div class="auth-tab" onclick="switchTab('register')">إنشاء حساب</div>
-    </div>
-    <div id="tab-login">
-      <div class="form-group">
-        <label>اسم المستخدم</label>
-        <input type="text" id="login-username" placeholder="اسم المستخدم"/>
-      </div>
-      <div class="form-group">
-        <label>كلمة المرور</label>
-        <input type="password" id="login-pass" placeholder="••••••••"/>
-      </div>
-      
-      <div class="remember-me-group" onclick="document.getElementById('login-remember').click()">
-        <input type="checkbox" id="login-remember" checked onclick="event.stopPropagation();"/>
-        <label for="login-remember">تذكرني في هذا الجهاز دائماً</label>
-      </div>
-
-      <button class="btn-primary" onclick="doLogin()">دخول</button>
-      <p class="auth-error" id="login-error"></p>
-    </div>
-    <div id="tab-register" style="display:none">
-      <div class="form-group">
-        <label>الاسم الكامل</label>
-        <input type="text" id="reg-name" placeholder="اسمك بالكامل"/>
-      </div>
-      <div class="form-group">
-        <label>اسم المستخدم</label>
-        <input type="text" id="reg-username" placeholder="مثال: ahmed123"/>
-      </div>
-      <div class="form-group">
-        <label>كلمة المرور</label>
-        <input type="password" id="reg-pass" placeholder="••••••••"/>
-      </div>
-      <button class="btn-primary" onclick="doRegister()">إنشاء حساب</button>
-      <p class="auth-error" id="reg-error"></p>
-    </div>
-  </div>
-</div>
-
 <div id="app">
   <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -394,10 +267,10 @@
       </div>
     </div>
     <div class="sidebar-user">
-      <div class="user-avatar" id="user-avatar">A</div>
+      <div class="user-avatar" id="user-avatar">👨‍⚕️</div>
       <div class="user-info">
-        <p id="user-name-display">مستخدم</p>
-        <span id="user-email-display"></span>
+        <p id="user-name-display">طبيب العيادة</p>
+        <span>لوحة التحكم المباشرة</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -417,9 +290,6 @@
         <span class="nav-icon">📋</span> قائمة النواقص
       </div>
     </nav>
-    <div class="sidebar-footer">
-      <button class="btn-logout" onclick="doLogout()">🚪 تسجيل الخروج</button>
-    </div>
   </div>
 
   <div class="main-content">
@@ -617,7 +487,6 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -631,10 +500,8 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-window._currentUser = null;
 window._patients = [];
 window._shortages = [];
 window._expenses = [];
@@ -645,22 +512,9 @@ document.getElementById('history-month-select').value = currentYearMonth;
 document.getElementById('exp-date').value = now.toISOString().split('T')[0];
 document.getElementById('today-date').textContent = now.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 
-// مراقبة الدخول التلقائي المستمر والذكي
-onAuthStateChanged(auth, user => {
-  // إخفاء الـ Splash screen فوراً بعد اكتمال الفحص بنجاح
-  document.getElementById('splash-loading').style.display = 'none';
-
-  if (user) {
-    window._currentUser = user;
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('user-name-display').textContent = user.displayName || 'طبيب عيادة زمزم';
-    document.getElementById('user-avatar').textContent = (user.displayName||'ز')[0].toUpperCase();
-    loadAllData();
-  } else {
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-  }
+// تحميل البيانات مباشرة عند فتح الصفحة بدون شروط الدخول
+window.addEventListener('DOMContentLoaded', () => {
+  loadAllData();
 });
 
 async function loadAllData() {
@@ -689,59 +543,6 @@ async function loadAllData() {
 window.toggleSidebar = () => {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-overlay').classList.toggle('show');
-};
-
-window.switchTab = (tab) => {
-  document.getElementById('tab-login').style.display = tab==='login'?'block':'none';
-  document.getElementById('tab-register').style.display = tab==='register'?'block':'none';
-  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
-};
-
-// كود تسجيل الدخول المدعوم بميزة تحديد الجلسة المستمرة (Remember Me)
-window.doLogin = async () => {
-  const username = document.getElementById('login-username').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const rememberMe = document.getElementById('login-remember').checked;
-
-  if(!username || !pass) return;
-  const fakeEmail = username.toLowerCase() + '@zamzam-dental.com';
-  
-  try { 
-    // ضبط نوع حفظ الجلسة على المتصفح بناء على اختيار زر تذكرني
-    const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-    await setPersistence(auth, persistenceType);
-
-    await signInWithEmailAndPassword(auth, fakeEmail, pass); 
-    showToast('تم تسجيل الدخول بنجاح');
-  } catch(e) { 
-    showToast('خطأ في اسم المستخدم أو كلمة المرور', true); 
-  }
-};
-
-window.doRegister = async () => {
-  const name = document.getElementById('reg-name').value.trim();
-  const username = document.getElementById('reg-username').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  if(!name || !username || pass.length<6) {
-    showToast('برجاء إدخال بيانات صالحة', true);
-    return;
-  }
-  const fakeEmail = username.toLowerCase() + '@zamzam-dental.com';
-  try {
-    const cr = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
-    await updateProfile(cr.user, { displayName: name });
-    showToast('تم إنشاء الحساب بنجاح');
-    location.reload();
-  } catch(e) { 
-    showToast('خطأ أثناء إنشاء الحساب', true); 
-  }
-};
-
-window.doLogout = () => {
-  if (confirm('هل تود تسجيل الخروج بالفعل؟ (ستحتاج لكتابة الباسورد مجدداً في المرة القادمة)')) {
-    signOut(auth);
-    showToast('تم تسجيل الخروج');
-  }
 };
 
 window.showPage = (page) => {
