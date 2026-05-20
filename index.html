@@ -169,12 +169,6 @@
   .section-title { font-size:15px; font-weight:700; color:var(--primary); margin:20px 0 12px; display:flex; align-items:center; gap:8px; }
   .notes-area { width:100%; padding:12px; border:2px solid var(--border); border-radius:10px; font-family:'Cairo',sans-serif; font-size:13px; min-height:100px; resize:vertical; outline:none; }
   .notes-area:focus { border-color:var(--primary); }
-  .img-upload-area {
-    border:2px dashed var(--border); border-radius:12px; padding:24px; text-align:center;
-    cursor:pointer; transition:all 0.2s; margin-bottom:12px;
-  }
-  .img-upload-area:hover { border-color:var(--primary); background:#f4f7f9; }
-  .img-upload-area input { display:none; }
   .xray-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; margin-top:12px; }
   .xray-item { position:relative; border-radius:10px; overflow:hidden; aspect-ratio:1; }
   .xray-item img { width:100%; height:100%; object-fit:cover; }
@@ -218,44 +212,82 @@
     padding:3px 10px; border-radius:20px; font-size:11px; color:var(--text-muted); font-weight:600;
   }
 
+  /* زر القائمة الذكي المطور (3 شرط) */
+  .mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 199;
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(30, 61, 89, 0.3);
+    transition: all 0.25s ease;
+  }
+  .mobile-menu-btn:active {
+    transform: scale(0.92);
+  }
+  .burger-icon {
+    width: 22px;
+    height: 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .burger-icon span {
+    display: block;
+    width: 100%;
+    height: 2.5px;
+    background-color: #ffffff;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+  /* تحريك الشرط عند فتح القائمة الجانبية */
+  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(2) {
+    opacity: 0;
+  }
+  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
   /* Responsive */
   @media(max-width:768px) {
-    .sidebar { transform:translateX(100%); transition:transform 0.3s; }
+    .sidebar { transform:translateX(100%); transition:transform 0.3s ease; }
     .sidebar.open { transform:translateX(0); }
-    .main-content { margin-right:0; padding:16px; }
-    .stats-grid { grid-template-columns:1fr 1fr; }
+    .main-content { margin-right:0; padding:16px; padding-top: 76px; }
+    .stats-grid { grid-template-columns: 1fr; gap: 12px; }
     .form-grid { grid-template-columns:1fr; }
     .patient-info-grid { grid-template-columns:1fr; }
     .mobile-menu-btn { display:flex !important; }
   }
-  .mobile-menu-btn {
-    display:none; position:fixed; top:16px; right:16px; z-index:99;
-    width:44px; height:44px; background:var(--primary); border-radius:12px;
-    border:none; cursor:pointer; align-items:center; justify-content:center;
-    color:white; font-size:20px; box-shadow:0 4px 12px rgba(0,0,0,0.2);
-  }
-  .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+  
+  .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:99; backdrop-filter: blur(2px); }
   .sidebar-overlay.show { display:block; }
 
-  .loading { text-align:center; padding:40px; color:var(--text-muted); font-size:14px; }
   .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
   .empty-state .empty-icon { font-size:48px; margin-bottom:12px; }
-  .empty-state p { font-size:14px; }
 
   .search-input {
     padding:10px 16px; border:2px solid var(--border); border-radius:10px;
     font-family:'Cairo',sans-serif; font-size:14px; outline:none; width:260px; transition:border 0.2s;
   }
   .search-input:focus { border-color:var(--primary); }
-
-  .actions-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .month-picker { padding:8px 12px; font-family:'Cairo',sans-serif; font-size:14px; border-radius:10px; border:2px solid var(--primary); background:white; font-weight:700; color:var(--primary); outline:none; }
 </style>
 </head>
 <body>
 
 <div id="app">
-  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <div class="sidebar" id="sidebar">
@@ -267,10 +299,10 @@
       </div>
     </div>
     <div class="sidebar-user">
-      <div class="user-avatar" id="user-avatar">👨‍⚕️</div>
+      <div class="user-avatar">👨‍⚕️</div>
       <div class="user-info">
-        <p id="user-name-display">طبيب العيادة</p>
-        <span>لوحة التحكم المباشرة</span>
+        <p>طبيب العيادة</p>
+        <span>إدارة مباشرة وبدون قيود</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -291,6 +323,14 @@
       </div>
     </nav>
   </div>
+
+  <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="القائمة">
+    <div class="burger-icon">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </button>
 
   <div class="main-content">
 
@@ -507,12 +547,12 @@ window._shortages = [];
 window._expenses = [];
 
 const now = new Date();
+// صيغة الشهر الحالية الموحدة YYYY-MM
 const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
 document.getElementById('history-month-select').value = currentYearMonth;
 document.getElementById('exp-date').value = now.toISOString().split('T')[0];
 document.getElementById('today-date').textContent = now.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 
-// تحميل البيانات مباشرة عند فتح الصفحة بدون شروط الدخول
 window.addEventListener('DOMContentLoaded', () => {
   loadAllData();
 });
@@ -600,7 +640,8 @@ window.savePatient = async () => {
     name, phone, procedure, total, paid, remaining,
     paymentsList: list,
     notes: "", xrays: [],
-    createdAt: serverTimestamp()
+    createdAt: serverTimestamp(),
+    dateStr: todayStr // حقل مخصص لضمان الفلترة الشهرية بدقة وثبات
   };
 
   try {
@@ -629,16 +670,24 @@ window.renderPatients = () => {
   document.getElementById('patients-list').innerHTML = `<table>
     <thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>تاريخ التسجيل</th><th>الملف الطبي</th></tr></thead>
     <tbody>
-      ${pts.map(p => `<tr>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.phone}</td>
-        <td><span class="badge badge-green">${p.procedure}</span></td>
-        <td>${p.total} ج</td>
-        <td>${p.paid} ج</td>
-        <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${p.remaining} ج</span></td>
-        <td>${p.createdAt ? new Date(p.createdAt.seconds*1000).toLocaleDateString('ar-EG') : '-'}</td>
-        <td><button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 سجل مريض</button></td>
-      </tr>`).join('')}
+      ${pts.map(p => {
+        let displayDate = '-';
+        if(p.dateStr) {
+          displayDate = new Date(p.dateStr).toLocaleDateString('ar-EG');
+        } else if (p.createdAt && p.createdAt.seconds) {
+          displayDate = new Date(p.createdAt.seconds*1000).toLocaleDateString('ar-EG');
+        }
+        return `<tr>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.phone}</td>
+          <td><span class="badge badge-green">${p.procedure}</span></td>
+          <td>${p.total} ج</td>
+          <td>${p.paid} ج</td>
+          <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${p.remaining} ج</span></td>
+          <td>${displayDate}</td>
+          <td><button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 سجل مريض</button></td>
+        </tr>`
+      }).join('')}
     </tbody></table>`;
 };
 
@@ -665,21 +714,26 @@ window.renderAccounts = () => {
     const [year, month] = chosenMonthStr.split('-').map(Number);
     
     pts.forEach(p => {
-      let pDate = new Date();
-      if (p.createdAt && p.createdAt.seconds) {
+      let pDate = null;
+      if (p.dateStr) {
+        pDate = new Date(p.dateStr);
+      } else if (p.createdAt && p.createdAt.seconds) {
         pDate = new Date(p.createdAt.seconds * 1000);
-      } else if(p.paymentsList && p.paymentsList[0] && p.paymentsList[0].date) {
+      } else if (p.paymentsList && p.paymentsList[0] && p.paymentsList[0].date) {
         pDate = new Date(p.paymentsList[0].date);
       }
 
-      const pYear = pDate.getFullYear();
-      const pMonth = pDate.getMonth() + 1;
+      if (pDate && !isNaN(pDate.getTime())) {
+        const pYear = pDate.getFullYear();
+        const pMonth = pDate.getMonth() + 1;
 
-      if (pYear === year && pMonth === month) {
-        mRevenue += (p.total || 0);
-        mRemaining += (p.remaining || 0);
+        if (pYear === year && pMonth === month) {
+          mRevenue += (p.total || 0);
+          mRemaining += (p.remaining || 0);
+        }
       }
       
+      // حساب الدفعات التي تمت في هذا الشهر بدقة بالغة
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
           if(pay && pay.date) {
