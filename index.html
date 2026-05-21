@@ -348,8 +348,6 @@
         <div class="card-title">📋 بيانات المريض الأساسية</div>
         <div class="form-grid">
           <div class="field-group autocomplete-wrap" id="patient-wrapper">
-     ect>
-</div>
     <label>* اسم المريض</label>
     <input type="text" id="p-name" placeholder="الاسم كاملاً" oninput="searchPatients()"/>
     <div class="autocomplete-list" id="patient-list"></div>
@@ -1373,34 +1371,4 @@ const list = document.getElementById('patient-list');
     document.getElementById('p-name').value = name;
     document.getElementById('proc-list').classList.remove('show');
   };
-</script>
-<script>
-// دالة لربط القائمة بالبيانات والخصم التلقائي
-document.addEventListener('DOMContentLoaded', function() {
-    const pNameInput = document.getElementById('p-name');
-    const pVisitType = document.getElementById('p-visit-type');
-
-    // عند الكتابة في اسم المريض
-    pNameInput.addEventListener('input', function() {
-        if (pVisitType.value === 'followup') {
-            // هنا يظهر قائمة بأسماء مرضاك (يمكنك جلبهم من window._patients)
-            const names = window._patients.map(p => p.name);
-            console.log("بحث في أسماء المرضى:", names);
-            // يمكنك هنا إظهار القائمة المنبثقة
-        }
-    });
-
-    // عند الحفظ (ربط الخصم التلقائي)
-    const originalSave = window.savePatient;
-    window.savePatient = function() {
-        if (pVisitType.value === 'followup') {
-            const paidAmount = parseFloat(document.getElementById('p-paid').value) || 0;
-            const patientName = document.getElementById('p-name').value;
-            
-            // تحديث الحساب فوراً
-            alert("تم تسجيل المتابعة وخصم المبلغ من حساب المريض: " + patientName);
-        }
-        originalSave(); // تشغيل دالة الحفظ الأصلية كما هي
-    };
-});
 </script>
