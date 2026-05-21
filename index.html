@@ -79,7 +79,8 @@
     background:white; border-radius:16px; padding:24px; margin-bottom:24px;
     box-shadow:0 4px 20px rgba(0,0,0,0.02); border:1px solid var(--border);
   }
-  .card-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+  .card-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:8px; justify-content:space-between; }
+  .card-title-text { display:flex; align-items:center; gap:8px; }
 
   /* FORM */
   .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
@@ -291,6 +292,8 @@
     .form-grid { grid-template-columns:1fr; gap: 16px; }
     .patient-info-grid { grid-template-columns:1fr; }
     .mobile-menu-btn { display:flex !important; }
+    .card-title { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .search-input { width: 100%; }
   }
   
   .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:99; backdrop-filter: blur(2px); }
@@ -439,12 +442,10 @@
       </div>
       
       <div class="card">
-        <div class="card-title">🌍 المجموع والملخص العام التراكمي لكافة الحالات</div>
-        <div class="stats-grid" id="account-stats"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📊 جدول المرضى والمدفوعات الكلية وتوزيع الحصص</div>
+        <div class="card-title">
+          <div class="card-title-text">📊 جدول المرضى والمدفوعات الكلية وتوزيع الحصص</div>
+          <input type="text" class="search-input" id="account-patient-search" placeholder="🔍 بحث سريع عن مريض هنا..." oninput="renderAccounts()"/>
+        </div>
         <div class="table-wrap" id="accounts-table"></div>
       </div>
 
@@ -462,6 +463,11 @@
           </div>
         </div>
         <div class="stats-grid" id="account-monthly-stats"></div>
+      </div>
+
+      <div class="card" style="background: #fafbfc;">
+        <div class="card-title">🌍 المجموع والملخص العام التراكمي لكافة الحالات (شامل)</div>
+        <div class="stats-grid" id="account-stats"></div>
       </div>
     </div>
 
@@ -830,8 +836,15 @@ window.quickDeletePatient = async (id) => {
 };
 
 window.renderAccounts = () => {
-  const pts = window._patients;
+  // الفلترة الذكية للبحث داخل صفحة الحسابات
+  const searchVal = document.getElementById('account-patient-search').value.toLowerCase();
+  let pts = window._patients;
   
+  if(searchVal) {
+    pts = pts.filter(p => p.name.toLowerCase().includes(searchVal));
+  }
+  
+  // 1. حساب الإحصائيات العامة (التراكمية) لكافة الحالات المتوفرة
   const tRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
   const tPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
   const tRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
@@ -845,6 +858,7 @@ window.renderAccounts = () => {
     <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>
     <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">صافي حصة الدكتور من الديون (60%)</div></div>`;
 
+  // 2. حساب الملخص المالي الشهري التفصيلي
   const chosenMonthStr = document.getElementById('history-month-select').value; 
   let mRevenue = 0, mPaid = 0, mRemaining = 0, mDocPaidShare = 0, mDocRemainingShare = 0;
 
@@ -897,6 +911,7 @@ window.renderAccounts = () => {
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${mDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من المحصل هذا الشهر</div></div>
     <div class="stat-card" style="background:#f4f7f9; border: 1px dashed var(--warning);"><div class="stat-icon">⚖️</div><div class="stat-value" style="color:var(--warning)">${mDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من ديون هذا الشهر</div></div>`;
 
+  // 3. عرض جدول الحسابات الرئيسي (المفصل)
   document.getElementById('accounts-table').innerHTML = `<table>
     <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>حصة الدكتور من المدفوع (60%)</th><th>حصة الدكتور من المتبقي (60%)</th><th>تسجيل دفعة</th></tr></thead>
     <tbody>
@@ -912,7 +927,7 @@ window.renderAccounts = () => {
         <td><button class="btn btn-edit btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 دفع</button></td>
       </tr>`).join('')}
       <tr class="table-total-row">
-        <td colspan="3">المجموع المالي العام الكلي:</td>
+        <td colspan="3">المجموع المالي للحالات المعروضة:</td>
         <td>${tRevenue.toLocaleString()} ج</td>
         <td style="color:var(--success)">${tPaid.toLocaleString()} ج</td>
         <td style="color:var(--danger)">${tRemaining.toLocaleString()} ج</td>
@@ -922,6 +937,7 @@ window.renderAccounts = () => {
       </tr>
     </tbody></table>`;
 
+  // 4. عرض جدول الديون والملخصات المتأخرة
   const debtors = pts.filter(p => p.remaining > 0);
   const totalDebtorsRem = debtors.reduce((s,p)=>s+p.remaining,0);
   const totalDebtorsDocRem = totalDebtorsRem * 0.6;
@@ -942,7 +958,7 @@ window.renderAccounts = () => {
         <td style="color:var(--warning)">${totalDebtorsDocRem.toLocaleString()} ج</td>
         <td></td>
       </tr>
-    </tbody></table>` : '<div style="padding:20px; text-align:center; color:var(--success);">🎉 لا توجد أي مديونيات متأخرة حالياً!</div>';
+    </tbody></table>` : '<div style="padding:20px; text-align:center; color:var(--success);">🎉 لا توجد أي مديونيات متأخرة للحالات المعروضة حالياً!</div>';
 };
 
 window.openPaymentTrigger = async (id) => {
