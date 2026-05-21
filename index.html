@@ -638,7 +638,15 @@ async function loadAllData() {
   }
 }
 
-// دالة مضمونة بنسبة 100% لتوحيد تنسيق التاريخ المكتوب والمسجل سحابياً لتجنب مشاكل الصفر
+// دالة تنظيف النص لاستخراج الرقم فقط وحمايته من التخريب النصي المكتوب في قاعدة البيانات سابقاً
+function cleanNumber(val) {
+  if (val === undefined || val === null) return 0;
+  if (typeof val === 'number') return val;
+  let str = String(val).replace(/Exchange:/gi, '').replace(/[^\d.]/g, '');
+  return parseFloat(str) || 0;
+}
+
+// دالة مضمونة لتوحيد تنسيق التاريخ المكتوب والمسجل سحابياً
 function getFormattedPatientDate(p) {
   let targetDate = "";
   if (p.dateStr && p.dateStr.trim() !== "") {
@@ -650,7 +658,6 @@ function getFormattedPatientDate(p) {
     targetDate = new Date().toISOString().split('T')[0];
   }
   
-  // لضمان التوافق التام (تحويل الصيغة مثل 2026-5-9 إلى 2026-05-09 برمجياً)
   const parts = targetDate.split('-');
   if (parts.length === 3) {
     return parts[0] + "-" + String(parts[1]).padStart(2, '0') + "-" + String(parts[2]).padStart(2, '0');
@@ -658,7 +665,6 @@ function getFormattedPatientDate(p) {
   return targetDate;
 }
 
-// دالة لتوحيد أي تاريخ نصي خارجي قادم من حقول الإدخال أو قائمة الدفعات لتجنب الفراغات والأصفار الناقصة
 function cleanDateStr(str) {
   if(!str) return "";
   const parts = str.trim().split('-');
@@ -691,8 +697,8 @@ window.showPage = (page) => {
 };
 
 window.calcFinance = () => {
-  const total = parseFloat(document.getElementById('p-total').value)||0;
-  const paid = parseFloat(document.getElementById('p-paid').value)||0;
+  const total = cleanNumber(document.getElementById('p-total').value);
+  const paid = cleanNumber(document.getElementById('p-paid').value);
   const remaining = total - paid;
   
   document.getElementById('calc-total').textContent = total.toLocaleString() + ' ج';
@@ -731,8 +737,8 @@ window.selectProcedure = (v) => {
 window.savePatient = async () => {
   const name = document.getElementById('p-name').value.trim();
   const procedure = document.getElementById('p-procedure').value.trim();
-  const total = parseFloat(document.getElementById('p-total').value)||0;
-  const paid = parseFloat(document.getElementById('p-paid').value)||0;
+  const total = cleanNumber(document.getElementById('p-total').value);
+  const paid = cleanNumber(document.getElementById('p-paid').value);
   const chosenDate = document.getElementById('p-custom-date').value || new Date().toISOString().split('T')[0];
   
   if(!name || !procedure) { alert('برجاء تعبئة اسم المريض والإجراء العلاجي المتبع أولاً'); return; }
@@ -779,13 +785,16 @@ window.renderPatients = () => {
       ${pts.map(p => {
         const dateString = getFormattedPatientDate(p);
         const displayDate = new Date(dateString).toLocaleDateString('ar-EG');
+        const pTotal = cleanNumber(p.total);
+        const pPaid = cleanNumber(p.paid);
+        const pRemaining = pTotal - pPaid;
         return `<tr>
           <td style="color:var(--primary); font-weight:700;">${displayDate}</td>
           <td><strong class="patient-clickable-name" onclick="openPatientModal('${p.id}')">${p.name}</strong></td>
           <td><span class="badge badge-green">${p.procedure}</span></td>
-          <td>${p.total} ج</td>
-          <td>${p.paid} ج</td>
-          <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${p.remaining} ج</span></td>
+          <td>${pTotal} ج</td>
+          <td>${pPaid} ج</td>
+          <td><span class="badge ${pRemaining>0?'badge-red':'badge-green'}">${pRemaining} ج</span></td>
           <td>
             <div class="actions-cell-gap">
               <button class="btn-action-sm btn-action-edit" onclick="openEditBasicModal('${p.id}')" title="تعديل البيانات الأساسية">✏️</button>
@@ -803,7 +812,7 @@ window.openEditBasicModal = (id) => {
   document.getElementById('edit-b-id').value = p.id;
   document.getElementById('edit-b-name').value = p.name;
   document.getElementById('edit-b-procedure').value = p.procedure;
-  document.getElementById('edit-b-total').value = p.total || 0;
+  document.getElementById('edit-b-total').value = cleanNumber(p.total);
   document.getElementById('edit-basic-modal').classList.add('show');
 };
 
@@ -813,17 +822,17 @@ window.saveBasicPatientEdits = async () => {
   const id = document.getElementById('edit-b-id').value;
   const name = document.getElementById('edit-b-name').value.trim();
   const procedure = document.getElementById('edit-b-procedure').value.trim();
-  const total = parseFloat(document.getElementById('edit-b-total').value) || 0;
+  const total = cleanNumber(document.getElementById('edit-b-total').value);
   
   if(!name || !procedure) { alert('الاسم والإجراء العلاجي حقول مطلوبة'); return; }
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
   
-  const paid = p.paid || 0;
+  const paid = cleanNumber(p.paid);
   const remaining = total - paid;
   
   try {
-    await updateDoc(doc(db, 'patients', id), { name, procedure, total, remaining });
+    await updateDoc(doc(db, 'patients', id), { name, procedure, total, paid, remaining });
     showToast('تم تحديث البيانات الأساسية بنجاح');
     closeEditBasicModal();
     await loadAllData();
@@ -839,7 +848,6 @@ window.quickDeletePatient = async (id) => {
   } catch(e) { showToast('فشل في حذف المريض', true); }
 };
 
-// الدالة المحدثة بالكامل لحساب الإيرادات والمتحصلات اليومية والشهرية بدقة وبدون أصفار
 window.renderAccounts = () => {
   const searchVal = document.getElementById('account-patient-search').value.toLowerCase();
   let pts = window._patients;
@@ -848,22 +856,20 @@ window.renderAccounts = () => {
     pts = pts.filter(p => p.name.toLowerCase().includes(searchVal));
   }
   
-  // 1. حسابات وتحصيلات اليوم (الفورية الدقيقة)
+  // 1. حسابات وتحصيلات اليوم
   const chosenDailyDate = cleanDateStr(document.getElementById('account-daily-date-select').value);
   let dRevenue = 0, dPaid = 0;
 
   if (chosenDailyDate) {
     window._patients.forEach(p => {
       const pDateStr = getFormattedPatientDate(p);
-      // حساب إجمالي قيمة كشوفات اليوم
       if(pDateStr === chosenDailyDate) {
-        dRevenue += (parseFloat(p.total) || 0);
+        dRevenue += cleanNumber(p.total);
       }
-      // حساب المبالغ الكاش المحصلة اليوم الفعلي من قائمة الدفعات
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
           if (pay && cleanDateStr(pay.date) === chosenDailyDate) {
-            dPaid += (parseFloat(pay.amount) || 0);
+            dPaid += cleanNumber(pay.amount);
           }
         });
       }
@@ -877,7 +883,7 @@ window.renderAccounts = () => {
     <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${dDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور الصافية من كاش اليوم (60%)</div></div>
   `;
 
-  // 2. الملخص المالي الشهري التفصيلي (تم إصلاح الفلترة الشاملة للدفعات)
+  // 2. الملخص المالي الشهري التفصيلي بعد تنظيف الأرقام نهائياً
   const chosenMonthStr = document.getElementById('history-month-select').value; 
   let mRevenue = 0, mPaid = 0, mRemaining = 0;
 
@@ -886,18 +892,21 @@ window.renderAccounts = () => {
     
     window._patients.forEach(p => {
       const pDateStr = getFormattedPatientDate(p);
+      const cleanedTotal = cleanNumber(p.total);
+      const cleanedPaid = cleanNumber(p.paid);
+      const cleanedRemaining = cleanedTotal - cleanedPaid;
+
       if (pDateStr) {
         const parts = pDateStr.split('-');
         const pYear = parseInt(parts[0]);
         const pMonth = parseInt(parts[1]);
         
         if (pYear === year && pMonth === month) {
-          mRevenue += (parseFloat(p.total) || 0);
-          mRemaining += (parseFloat(p.remaining) || 0);
+          mRevenue += cleanedTotal;
+          mRemaining += cleanedRemaining;
         }
       }
       
-      // احتساب كل المبالغ المحصلة داخل هذا الشهر (سواء للمريض الجديد أو دفعات قديمة سددت في هذا الشهر)
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
           if(pay && pay.date) {
@@ -907,7 +916,7 @@ window.renderAccounts = () => {
               const payYear = parseInt(payParts[0]);
               const payMonth = parseInt(payParts[1]);
               if (payYear === year && payMonth === month) {
-                mPaid += (parseFloat(pay.amount) || 0);
+                mPaid += cleanNumber(pay.amount);
               }
             }
           }
@@ -926,9 +935,15 @@ window.renderAccounts = () => {
     <div class="stat-card" style="background:#f4f7f9; border: 1px dashed var(--warning);"><div class="stat-icon">⚖️</div><div class="stat-value" style="color:var(--warning)">${mDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من ديون هذا الشهر (60%)</div></div>`;
 
   // 3. الحسابات التراكمية العامة والشاملة
-  const tRevenue = window._patients.reduce((s,p)=>s+(parseFloat(p.total)||0),0);
-  const tPaid = window._patients.reduce((s,p)=>s+(parseFloat(p.paid)||0),0);
-  const tRemaining = window._patients.reduce((s,p)=>s+(parseFloat(p.remaining)||0),0);
+  let tRevenue = 0, tPaid = 0, tRemaining = 0;
+  window._patients.forEach(p => {
+    const rT = cleanNumber(p.total);
+    const rP = cleanNumber(p.paid);
+    tRevenue += rT;
+    tPaid += rP;
+    tRemaining += (rT - rP);
+  });
+  
   const tDocPaidShare = tPaid * 0.6; 
   const tDocRemainingShare = tRemaining * 0.6; 
 
@@ -946,15 +961,18 @@ window.renderAccounts = () => {
       ${pts.map((p) => {
         const dateString = getFormattedPatientDate(p);
         const dStr = new Date(dateString).toLocaleDateString('ar-EG');
+        const rTotal = cleanNumber(p.total);
+        const rPaid = cleanNumber(p.paid);
+        const rRemaining = rTotal - rPaid;
         return `<tr>
           <td style="color:var(--primary); font-weight:700;">${dStr}</td>
           <td><strong>${p.name}</strong></td>
           <td>${p.procedure}</td>
-          <td>${p.total} ج</td>
-          <td style="color:var(--success); font-weight:bold;">${p.paid} ج</td>
-          <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
-          <td style="color:var(--primary); font-weight:bold;">Exchange: ${(p.paid * 0.6).toLocaleString()} ج</td>
-          <td style="color:var(--warning); font-weight:bold;">${(p.remaining * 0.6).toLocaleString()} ج</td>
+          <td>${rTotal} ج</td>
+          <td style="color:var(--success); font-weight:bold;">${rPaid} ج</td>
+          <td style="color:var(--danger); font-weight:bold;">${rRemaining} ج</td>
+          <td style="color:var(--primary); font-weight:bold;">Exchange: ${(rPaid * 0.6).toLocaleString()} ج</td>
+          <td style="color:var(--warning); font-weight:bold;">${(rRemaining * 0.6).toLocaleString()} ج</td>
           <td><button class="btn btn-edit btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 دفع</button></td>
         </tr>`
       }).join('')}
@@ -971,8 +989,9 @@ window.renderAccounts = () => {
     </tbody></table>`;
 
   // 5. عرض الجدول الثاني (جدول الديون)
-  const debtors = pts.filter(p => p.remaining > 0);
-  const totalDebtorsRem = debtors.reduce((s,p)=>s+p.remaining,0);
+  const debtors = pts.filter(p => (cleanNumber(p.total) - cleanNumber(p.paid)) > 0);
+  let totalDebtorsRem = 0;
+  debtors.forEach(p => { totalDebtorsRem += (cleanNumber(p.total) - cleanNumber(p.paid)); });
   const totalDebtorsDocRem = totalDebtorsRem * 0.6;
 
   document.getElementById('debtors-table').innerHTML = debtors.length ? `<table>
@@ -981,11 +1000,12 @@ window.renderAccounts = () => {
       ${debtors.map((p) => {
         const dateString = getFormattedPatientDate(p);
         const dStr = new Date(dateString).toLocaleDateString('ar-EG');
+        const rem = cleanNumber(p.total) - cleanNumber(p.paid);
         return `<tr>
           <td style="color:var(--primary); font-weight:700;">${dStr}</td>
           <td><strong style="color:var(--danger)">${p.name}</strong></td>
-          <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
-          <td style="color:var(--warning); font-weight:bold;">${p.remaining * 0.6} ج</td>
+          <td style="color:var(--danger); font-weight:bold;">${rem} ج</td>
+          <td style="color:var(--warning); font-weight:bold;">${rem * 0.6} ج</td>
           <td><button class="btn btn-success btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 إضافة دفعة</button></td>
         </tr>`
       }).join('')}
@@ -1003,7 +1023,11 @@ window.openPaymentTrigger = async (id) => {
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
 
-  const amtStr = prompt(`تسجيل دفعة جديدة للمريض: ${p.name}\nالمتبقي الإجمالي الحالي: ${p.remaining} ج\n\nأدخل قيمة الدفعة الحالية بالجنيه:`);
+  const rTotal = cleanNumber(p.total);
+  const rPaid = cleanNumber(p.paid);
+  const rRemaining = rTotal - rPaid;
+
+  const amtStr = prompt(`تسجيل دفعة جديدة للمريض: ${p.name}\nالمتبقي الإجمالي الحالي: ${rRemaining} ج\n\nأدخل قيمة الدفعة الحالية بالجنيه:`);
   if(!amtStr || isNaN(parseFloat(amtStr))) return;
   
   const todayStr = new Date().toISOString().split('T')[0];
@@ -1011,8 +1035,8 @@ window.openPaymentTrigger = async (id) => {
   if(!dateStr) return;
 
   const amt = parseFloat(amtStr);
-  const updatedPaid = (parseFloat(p.paid) || 0) + amt;
-  const updatedRemaining = (parseFloat(p.total) || 0) - updatedPaid;
+  const updatedPaid = rPaid + amt;
+  const updatedRemaining = rTotal - updatedPaid;
   const standardizedPaymentDate = cleanDateStr(dateStr);
 
   const arr = p.paymentsList || [];
@@ -1096,11 +1120,15 @@ window.openPatientModal = (id) => {
   if(!p) return;
   document.getElementById('modal-patient-name').textContent = p.name;
   
+  const rTotal = cleanNumber(p.total);
+  const rPaid = cleanNumber(p.paid);
+  const rRemaining = rTotal - rPaid;
+
   document.getElementById('modal-body').innerHTML = `
     <div class="patient-info-grid">
       <div class="info-item"><label>الإجراء العلاجي</label><p>${p.procedure}</p></div>
-      <div class="info-item"><label>إجمالي التكلفة</label><p>${p.total} جنيه</p></div>
-      <div class="info-item"><label>المسدد الكلي</label><p style="color:var(--success)">${p.paid} جنيه</p></div>
+      <div class="info-item"><label>إجمالي التكلفة</label><p>${rTotal} جنيه</p></div>
+      <div class="info-item"><label>المسدد الكلي</label><p style="color:var(--success)">${rPaid} جنيه</p></div>
     </div>
     <div class="section-title">📝 ملاحظات الطبيب والتشخيص العلاجي للأعراض</div>
     <textarea class="notes-area" id="modal-notes" placeholder="ملاحظات وخطة علاج...">${p.notes || ''}</textarea>
@@ -1120,7 +1148,7 @@ window.openPatientModal = (id) => {
     </div>
     <div class="section-title">📊 تفاصيل سجل الدفعات النقدية التاريخية</div>
     <div style="background:var(--bg); border-radius:10px; padding:12px; max-height:150px; overflow-y:auto;">
-      ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة: <strong>${py.amount} ج</strong></span><span>📅 تاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
+      ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة: <strong>${cleanNumber(py.amount)} ج</strong></span><span>📅 تاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
     </div>
     <div style="margin-top:24px; display:flex; justify-content:space-between;">
       <button class="btn btn-success" onclick="savePatientModalChanges('${p.id}')">💾 حفظ التحديثات الطبية</button>
