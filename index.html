@@ -1331,3 +1331,35 @@ function showToast(msg, isError = false) {
     };
   });
 </script>
+<script>
+  // نطور دالة البحث عشان تظهر القائمة وتدور في الأسماء
+  window.searchPatients = function() {
+    const type = document.getElementById('p-visit-type').value;
+    const query = document.getElementById('p-name').value;
+    const list = document.getElementById('proc-list'); // بنستخدم نفس حاوية القائمة اللي في كودك الأصلي
+
+    if (type !== 'followup' || query.length < 1) {
+      list.classList.remove('show');
+      return;
+    }
+
+    // هنا استبدل "احمد محمد", "سارة محمود" بأسماء مرضاك الفعليين
+    const myPatients = ["أحمد محمد", "سارة محمود", "خالد علي", "منى حسن"]; 
+    const filtered = myPatients.filter(p => p.includes(query));
+
+    if (filtered.length > 0) {
+      list.innerHTML = filtered.map(p => 
+        `<div class="autocomplete-item" onclick="selectPatient('${p}')">${p}</div>`
+      ).join('');
+      list.classList.add('show');
+    } else {
+      list.classList.remove('show');
+    }
+  };
+
+  // دالة اختيار المريض
+  window.selectPatient = function(name) {
+    document.getElementById('p-name').value = name;
+    document.getElementById('proc-list').classList.remove('show');
+  };
+</script>
