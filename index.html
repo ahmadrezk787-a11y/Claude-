@@ -638,12 +638,16 @@ async function loadAllData() {
   }
 }
 
-// دالة تنظيف النص لاستخراج الرقم فقط وحمايته من التخريب النصي المكتوب في قاعدة البيانات سابقاً
+// دالة تنظيف ومقاومة النصوص التخريبية في قاعدة البيانات (مُحصنة 100%)
 function cleanNumber(val) {
   if (val === undefined || val === null) return 0;
-  if (typeof val === 'number') return val;
-  let str = String(val).replace(/Exchange:/gi, '').replace(/[^\d.]/g, '');
-  return parseFloat(str) || 0;
+  if (typeof val === 'number') {
+    return isNaN(val) ? 0 : val;
+  }
+  // تحويل النص، إزالة النصوص مثل Exchange أو جنيه أو ج، والإبقاء على الأرقام والكسور فقط
+  let str = String(val).replace(/Exchange:/gi, '').replace(/جنيه/g, '').replace(/ج/g, '').replace(/[^\d.]/g, '');
+  let num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
 }
 
 // دالة مضمونة لتوحيد تنسيق التاريخ المكتوب والمسجل سحابياً
@@ -792,9 +796,9 @@ window.renderPatients = () => {
           <td style="color:var(--primary); font-weight:700;">${displayDate}</td>
           <td><strong class="patient-clickable-name" onclick="openPatientModal('${p.id}')">${p.name}</strong></td>
           <td><span class="badge badge-green">${p.procedure}</span></td>
-          <td>${pTotal} ج</td>
-          <td>${pPaid} ج</td>
-          <td><span class="badge ${pRemaining>0?'badge-red':'badge-green'}">${pRemaining} ج</span></td>
+          <td>${pTotal.toLocaleString()} ج</td>
+          <td>${pPaid.toLocaleString()} ج</td>
+          <td><span class="badge ${pRemaining>0?'badge-red':'badge-green'}">${pRemaining.toLocaleString()} ج</span></td>
           <td>
             <div class="actions-cell-gap">
               <button class="btn-action-sm btn-action-edit" onclick="openEditBasicModal('${p.id}')" title="تعديل البيانات الأساسية">✏️</button>
@@ -883,7 +887,7 @@ window.renderAccounts = () => {
     <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${dDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور الصافية من كاش اليوم (60%)</div></div>
   `;
 
-  // 2. الملخص المالي الشهري التفصيلي بعد تنظيف الأرقام نهائياً
+  // 2. الملخص المالي الشهري التفصيلي
   const chosenMonthStr = document.getElementById('history-month-select').value; 
   let mRevenue = 0, mPaid = 0, mRemaining = 0;
 
@@ -968,9 +972,9 @@ window.renderAccounts = () => {
           <td style="color:var(--primary); font-weight:700;">${dStr}</td>
           <td><strong>${p.name}</strong></td>
           <td>${p.procedure}</td>
-          <td>${rTotal} ج</td>
-          <td style="color:var(--success); font-weight:bold;">${rPaid} ج</td>
-          <td style="color:var(--danger); font-weight:bold;">${rRemaining} ج</td>
+          <td>${rTotal.toLocaleString()} ج</td>
+          <td style="color:var(--success); font-weight:bold;">${rPaid.toLocaleString()} ج</td>
+          <td style="color:var(--danger); font-weight:bold;">${rRemaining.toLocaleString()} ج</td>
           <td style="color:var(--primary); font-weight:bold;">Exchange: ${(rPaid * 0.6).toLocaleString()} ج</td>
           <td style="color:var(--warning); font-weight:bold;">${(rRemaining * 0.6).toLocaleString()} ج</td>
           <td><button class="btn btn-edit btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 دفع</button></td>
@@ -1004,8 +1008,8 @@ window.renderAccounts = () => {
         return `<tr>
           <td style="color:var(--primary); font-weight:700;">${dStr}</td>
           <td><strong style="color:var(--danger)">${p.name}</strong></td>
-          <td style="color:var(--danger); font-weight:bold;">${rem} ج</td>
-          <td style="color:var(--warning); font-weight:bold;">${rem * 0.6} ج</td>
+          <td style="color:var(--danger); font-weight:bold;">${rem.toLocaleString()} ج</td>
+          <td style="color:var(--warning); font-weight:bold;">${(rem * 0.6).toLocaleString()} ج</td>
           <td><button class="btn btn-success btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 إضافة دفعة</button></td>
         </tr>`
       }).join('')}
@@ -1127,8 +1131,8 @@ window.openPatientModal = (id) => {
   document.getElementById('modal-body').innerHTML = `
     <div class="patient-info-grid">
       <div class="info-item"><label>الإجراء العلاجي</label><p>${p.procedure}</p></div>
-      <div class="info-item"><label>إجمالي التكلفة</label><p>${rTotal} جنيه</p></div>
-      <div class="info-item"><label>المسدد الكلي</label><p style="color:var(--success)">${rPaid} جنيه</p></div>
+      <div class="info-item"><label>إجمالي التكلفة</label><p>${rTotal.toLocaleString()} جنيه</p></div>
+      <div class="info-item"><label>المسدد الكلي</label><p style="color:var(--success)">${rPaid.toLocaleString()} جنيه</p></div>
     </div>
     <div class="section-title">📝 ملاحظات الطبيب والتشخيص العلاجي للأعراض</div>
     <textarea class="notes-area" id="modal-notes" placeholder="ملاحظات وخطة علاج...">${p.notes || ''}</textarea>
@@ -1148,7 +1152,7 @@ window.openPatientModal = (id) => {
     </div>
     <div class="section-title">📊 تفاصيل سجل الدفعات النقدية التاريخية</div>
     <div style="background:var(--bg); border-radius:10px; padding:12px; max-height:150px; overflow-y:auto;">
-      ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة: <strong>${cleanNumber(py.amount)} ج</strong></span><span>📅 تاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
+      ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة: <strong>${cleanNumber(py.amount).toLocaleString()} ج</strong></span><span>📅 تاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
     </div>
     <div style="margin-top:24px; display:flex; justify-content:space-between;">
       <button class="btn btn-success" onclick="savePatientModalChanges('${p.id}')">💾 حفظ التحديثات الطبية</button>
