@@ -638,18 +638,18 @@ async function loadAllData() {
   }
 }
 
-// دالة تنظيف ومقاومة النصوص التخريبية في قاعدة البيانات (مُحصنة 100%)
+// دالة تنظيف ومقاومة النصوص التخريبية في قاعدة البيانات لضمان قراءة الأرقام بشكل سليم
 function cleanNumber(val) {
   if (val === undefined || val === null) return 0;
   if (typeof val === 'number') {
     return isNaN(val) ? 0 : val;
   }
-  let str = String(val).replace(/Exchange:/gi, '').replace(/جنيه/g, '').replace(/ج/g, '').replace(/[^\d.]/g, '');
+  let str = String(val).replace(/Exchange:/gi, '').replace(/Exchange/gi, '').replace(/[:]/g, '').replace(/جنيه/g, '').replace(/ج/g, '').replace(/[^\d.]/g, '');
   let num = parseFloat(str);
   return isNaN(num) ? 0 : num;
 }
 
-// دالة توحيد تنسيق التاريخ المكتوب والمسجل سحابياً بشكل كامل وصارم لمطابقة الأيام القديمة بنجاح
+// دالة توحيد تنسيق التاريخ المكتوب والمسجل سحابياً بشكل كامل وصارم لمطابقة الأيام القديمة بنجاح وبدون أخطاء
 function getFormattedPatientDate(p) {
   let targetDate = "";
   if (p.dateStr && p.dateStr.trim() !== "") {
@@ -663,13 +663,15 @@ function getFormattedPatientDate(p) {
   return cleanDateStr(targetDate);
 }
 
+// دالة معالجة النصوص والتواريخ لتوحيد الأصفار (مثال: تحويل 2026-5-9 إلى 2026-05-09) لمنع قراءة الأصفار كقيمة خالية
 function cleanDateStr(str) {
   if(!str) return "";
-  const parts = str.trim().split('-');
+  let cleanStr = String(str).replace(/Exchange:/gi, '').replace(/Exchange/gi, '').trim();
+  const parts = cleanStr.split('-');
   if(parts.length === 3) {
     return parts[0] + "-" + String(parts[1]).padStart(2, '0') + "-" + String(parts[2]).padStart(2, '0');
   }
-  return str.trim();
+  return cleanStr;
 }
 
 window.toggleSidebar = () => {
@@ -854,25 +856,24 @@ window.renderAccounts = () => {
     pts = pts.filter(p => p.name.toLowerCase().includes(searchVal));
   }
   
-  // 1. حسابات وتحصيلات اليوم الفعلي المختار (يصلح للأيام القديمة والجديدة بدون تداخل)
+  // 1. حسابات وتحصيلات اليوم الفعلي المختار (يصلح للأيام القديمة والجديدة بدون تداخل وبصيغة معالجة صارمة)
   const chosenDailyDate = cleanDateStr(document.getElementById('account-daily-date-select').value);
   let dRevenue = 0, dPaid = 0;
 
-  if (chosenDailyDate) {
-    window._patients.forEach(p => {
-      const pDateStr = getFormattedPatientDate(p);
-      if(pDateStr === chosenDailyDate) {
-        dRevenue += cleanNumber(p.total);
-      }
-      if (p.paymentsList && Array.isArray(p.paymentsList)) {
-        p.paymentsList.forEach(pay => {
-          if (pay && pay.date && cleanDateStr(pay.date) === chosenDailyDate) {
-            dPaid += cleanNumber(pay.amount);
-          }
-        });
-      }
-    });
-  }
+  window._patients.forEach(p => {
+    const pDateStr = getFormattedPatientDate(p);
+    if(pDateStr === chosenDailyDate) {
+      dRevenue += cleanNumber(p.total);
+    }
+    if (p.paymentsList && Array.isArray(p.paymentsList)) {
+      p.paymentsList.forEach(pay => {
+        if (pay && pay.date && cleanDateStr(pay.date) === chosenDailyDate) {
+          dPaid += cleanNumber(pay.amount);
+        }
+      });
+    }
+  });
+  
   const dDocPaidShare = dPaid * 0.6;
 
   document.getElementById('account-daily-stats').innerHTML = `
@@ -952,7 +953,7 @@ window.renderAccounts = () => {
     <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>
     <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">صافي حصة الدكتور من الديون (60%)</div></div>`;
 
-  // 4. عرض الجدول الأول للمرضى (تمت إزالة الكلمة النصية exchange نهائياً منها)
+  // 4. عرض الجدول الأول للمرضى (تم تنظيفه كلياً من أي نصوص زائدة)
   document.getElementById('accounts-table').innerHTML = `<table>
     <thead><tr><th>التاريخ</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>حصة الدكتور من المدفوع (60%)</th><th>حصة الدكتور من المتبقي (60%)</th><th>إجراء</th></tr></thead>
     <tbody>
@@ -1149,7 +1150,7 @@ window.openPatientModal = (id) => {
       ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة: <strong>${cleanNumber(py.amount).toLocaleString()} ج</strong></span><span>📅 تاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
     </div>
     <div style="margin-top:24px; display:flex; justify-content:space-between;">
-      <button class="btn btn-success" onclick="savePatientModalChanges('${p.id}')">💾 حفظ التحديثات الطبية</button>
+      <button class="btn btn-success" onclick="savePatientModalChanges('${p.id}')">💾 حفظ الملاحظات الطبية</button>
       <button class="btn btn-danger btn-sm" onclick="deletePatient('${p.id}')">🗑️ حذف المريض نهائياً</button>
     </div>
   `;
