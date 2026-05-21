@@ -1305,3 +1305,29 @@ function showToast(msg, isError = false) {
 </script>
 </body>
 </html>
+<script>
+  // ننتظر حتى تحمل الصفحة تماماً
+  window.addEventListener('load', function() {
+    // 1. إنشاء القائمة (الـ Select)
+    const container = document.querySelector('.form-grid'); // مكان الحقول
+    const div = document.createElement('div');
+    div.className = 'field-group';
+    div.innerHTML = `
+      <label>نوع الزيارة</label>
+      <select id="p-visit-type" onchange="toggleVisitMode()">
+        <option value="new">مريض جديد</option>
+        <option value="followup">متابعة (مريض سابق)</option>
+      </select>
+    `;
+    // إضافة القائمة قبل حقل الاسم
+    const nameField = document.querySelector('#p-name').parentElement;
+    container.insertBefore(div, nameField);
+
+    // 2. دالة التبديل الذكية
+    window.toggleVisitMode = function() {
+      const type = document.getElementById('p-visit-type').value;
+      const input = document.getElementById('p-name');
+      input.placeholder = (type === 'followup') ? "ابحث عن اسم المريض..." : "الاسم كاملاً";
+    };
+  });
+</script>
