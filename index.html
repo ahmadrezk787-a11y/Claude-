@@ -615,7 +615,6 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// دالة تنظيف ومقاومة النصوص التخريبية في قاعدة البيانات لضمان قراءة الأرقام بشكل سليم
 function cleanNumber(val) {
   if (val === undefined || val === null) return 0;
   if (typeof val === 'number') {
@@ -626,7 +625,6 @@ function cleanNumber(val) {
   return isNaN(num) ? 0 : num;
 }
 
-// دالة معالجة النصوص والتواريخ لتوحيد الأصفار (مثال: تحويل 2026-5-9 إلى 2026-05-09) لمنع قراءة الأصفار كقيمة خالية
 function cleanDateStr(str) {
   if(!str) return "";
   let cleanStr = String(str).replace(/Exchange:/gi, '').replace(/Exchange/gi, '').trim();
@@ -637,7 +635,6 @@ function cleanDateStr(str) {
   return cleanStr;
 }
 
-// دالة توحيد تنسيق التاريخ المكتوب والمسجل سحابياً بشكل كامل وصارم لمطابقة الأيام القديمة بنجاح وبدون أخطاء
 function getFormattedPatientDate(p) {
   let targetDate = "";
   if (p.dateStr && p.dateStr.trim() !== "") {
@@ -657,13 +654,11 @@ async function loadAllData() {
     const snapP = await getDocs(qP);
     let rawPatients = snapP.docs.map(d => ({id:d.id, ...d.data()}));
     
-    // 🧠 ميزة الإصلاح الذاتي والتطهير التلقائي للبيانات القديمة المعلقة في السحاب 🧠
     for (let p of rawPatients) {
       let needsFix = false;
       let fixedDateStr = p.dateStr || "";
       let fixedPaymentsList = p.paymentsList || [];
       
-      // 1. فحص وتطهير تاريخ الحالة الأساسي
       if (!p.dateStr || p.dateStr.includes("Exchange") || p.dateStr.includes(":")) {
         fixedDateStr = getFormattedPatientDate(p);
         needsFix = true;
@@ -675,7 +670,6 @@ async function loadAllData() {
         }
       }
       
-      // 2. فحص وتطهير تواريخ قائمة المدفوعات التاريخية للمريض القديم
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         fixedPaymentsList = p.paymentsList.map(pay => {
           if (pay && pay.date && (pay.date.includes("Exchange") || pay.date.includes(":"))) {
@@ -690,7 +684,6 @@ async function loadAllData() {
         });
       }
 
-      // إذا اكتشفنا تشوه في البيانات القديمة، نحدث السحاب فوراً لتنظيفها للأبد وتسميعها في الحسابات التراكمية
       if (needsFix) {
         try {
           const docRef = doc(db, 'patients', p.id);
@@ -911,15 +904,20 @@ window.renderAccounts = () => {
     pts = pts.filter(p => p.name.toLowerCase().includes(searchVal));
   }
   
-  // 1. حسابات وتحصيلات اليوم الفعلي المختار (يصلح للأيام القديمة والجديدة بدون تداخل وبصيغة معالجة صارمة)
+  // 1. حسابات وتحصيلات اليوم الفعلي المختار (تحديث ذكي يشمل الديون ونسبها اليومية)
   const chosenDailyDate = cleanDateStr(document.getElementById('account-daily-date-select').value);
-  let dRevenue = 0, dPaid = 0;
+  let dRevenue = 0, dPaid = 0, dRemaining = 0;
 
   window._patients.forEach(p => {
     const pDateStr = getFormattedPatientDate(p);
+    
+    // إذا كانت الحالة مسجلة اليوم، نجمع الإيراد والمتبقي الأصلي لها اليوم
     if(pDateStr === chosenDailyDate) {
       dRevenue += cleanNumber(p.total);
+      dRemaining += (cleanNumber(p.total) - cleanNumber(p.paid));
     }
+    
+    // المبالغ الكاش المحصلة اليوم فعلياً (سواء لحالات اليوم أو سداد قديم)
     if (p.paymentsList && Array.isArray(p.paymentsList)) {
       p.paymentsList.forEach(pay => {
         if (pay && pay.date && cleanDateStr(pay.date) === chosenDailyDate) {
@@ -930,11 +928,14 @@ window.renderAccounts = () => {
   });
   
   const dDocPaidShare = dPaid * 0.6;
+  const dDocRemainingShare = dRemaining * 0.6;
 
   document.getElementById('account-daily-stats').innerHTML = `
     <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">📅</div><div class="stat-value">${dRevenue.toLocaleString()} ج</div><div class="stat-label">قيمة كشوفات وحالات اليوم المختار</div></div>
     <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--success)">${dPaid.toLocaleString()} ج</div><div class="stat-label">المبالغ الكاش المحصلة في الخزينة</div></div>
     <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${dDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور الصافية من الكاش (60%)</div></div>
+    <div class="stat-card" style="background:#fffafa; border:1px solid #fecaca;"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--danger)">${dRemaining.toLocaleString()} ج</div><div class="stat-label">الفلوس المتبقية (ديون اليوم الجديد)</div></div>
+    <div class="stat-card" style="background:#fffaf0; border:1px solid #fde68a;"><div class="stat-icon">⚖️</div><div class="stat-value" style="color:var(--warning)">${dDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">نسبة الدكتور من المتبقي اليومي (60%)</div></div>
   `;
 
   // 2. الملخص المالي الشهري التفصيلي
@@ -1008,7 +1009,7 @@ window.renderAccounts = () => {
     <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>
     <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">صافي حصة الدكتور من الديون (60%)</div></div>`;
 
-  // 4. عرض الجدول الأول للمرضى (تم تنظيفه كلياً من أي نصوص زائدة)
+  // 4. عرض الجدول الأول للمرضى
   document.getElementById('accounts-table').innerHTML = `<table>
     <thead><tr><th>التاريخ</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>حصة الدكتور من المدفوع (60%)</th><th>حصة الدكتور من المتبقي (60%)</th><th>إجراء</th></tr></thead>
     <tbody>
