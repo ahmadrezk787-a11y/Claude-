@@ -100,7 +100,7 @@
   }
   .field-group textarea { resize:vertical; min-height:80px; }
 
-  /* Autocomplete & Dropdown Arrow */
+  /* Autocomplete */
   .autocomplete-wrap { position:relative; }
   .autocomplete-wrap ::after {
     content: "▼";
@@ -155,7 +155,6 @@
   .btn-edit:hover { background:#2980b9; }
   .btn-sm { padding:6px 12px; font-size:12px; border-radius:8px; }
   
-  /* الأزرار المصغرة الذكية للاجراءات السريعة */
   .btn-action-sm { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; border: none; cursor: pointer; transition: all 0.2s; color: white; }
   .btn-action-edit { background-color: #2da44e; }
   .btn-action-edit:hover { background-color: #2c974b; transform: translateY(-1px); }
@@ -176,19 +175,10 @@
   .badge-red { background:#ffebeb; color:var(--danger); }
   .badge-orange { background:#fff3e0; color:var(--warning); }
 
-  /* اسم المريض كزر قابل للضغط لفتح الملف */
-  .patient-clickable-name {
-    color: var(--primary);
-    cursor: pointer;
-    font-weight: 700;
-    transition: color 0.15s ease;
-  }
-  .patient-clickable-name:hover {
-    color: #3498db;
-    text-decoration: underline;
-  }
+  .patient-clickable-name { color: var(--primary); cursor: pointer; font-weight: 700; transition: color 0.15s ease; }
+  .patient-clickable-name:hover { color: #3498db; text-decoration: underline; }
 
-  /* PATIENT MODAL */
+  /* MODALS */
   .modal-overlay {
     position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200;
     display:flex; align-items:center; justify-content:center; padding:20px;
@@ -251,31 +241,18 @@
   .toast.show { transform:translateY(0); }
   .toast.error { background:var(--danger); }
 
-  /* DATE */
   .date-badge {
     display:inline-flex; align-items:center; gap:5px; background:var(--bg);
     padding:3px 10px; border-radius:20px; font-size:11px; color:var(--text-muted); font-weight:600;
   }
 
-  /* الـ 3 شرط الذكية */
+  /* Mobile Button */
   .mobile-menu-btn {
-    display: none;
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 199;
-    width: 46px;
-    height: 46px;
+    display: none; position: fixed; top: 16px; right: 16px; z-index: 199; width: 46px; height: 46px;
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 14px rgba(30, 61, 89, 0.3);
-    transition: all(0.25s) ease;
+    border-radius: 12px; border: none; cursor: pointer; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(30, 61, 89, 0.3); transition: all 0.25s ease;
   }
-  .mobile-menu-btn:active { transform: scale(0.92); }
   .burger-icon { width: 22px; height: 16px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
   .burger-icon span { display: block; width: 100%; height: 2.5px; background-color: #ffffff; border-radius: 2px; transition: all 0.3s ease; }
   
@@ -294,11 +271,11 @@
     .mobile-menu-btn { display:flex !important; }
     .card-title { flex-direction: column; align-items: flex-start; gap: 12px; }
     .search-input { width: 100%; }
+    .account-header-filters { flex-direction: column; width: 100%; align-items: flex-start !important; gap: 12px; }
   }
   
   .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:99; backdrop-filter: blur(2px); }
   .sidebar-overlay.show { display:block; }
-
   .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
   .empty-state .empty-icon { font-size:48px; margin-bottom:12px; }
 
@@ -437,10 +414,21 @@
       <div class="page-header">
         <div>
           <h2>💰 الحسابات والملخص المالي العام</h2>
-          <p>متابعة الحسابات العامة والمديونيات وحصص الأطباء بدقة متناهية</p>
+          <p>متابعة الحسابات والتاريخ والمديونيات الفورية</p>
         </div>
       </div>
       
+      <div class="card" style="border-right: 5px solid var(--primary-light); background: #fbfdfb;">
+        <div class="account-header-filters" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
+          <div class="card-title" style="margin-bottom:0;">🌞 حسابات ومتحصلات اليوم الفورية</div>
+          <div>
+            <label style="font-size:13px; font-weight:700; margin-left:6px; color:var(--primary);">اختر تاريخ اليوم:</label>
+            <input type="date" class="month-picker" id="account-daily-date-select" onchange="renderAccounts()"/>
+          </div>
+        </div>
+        <div class="stats-grid" id="account-daily-stats"></div>
+      </div>
+
       <div class="card">
         <div class="card-title">
           <div class="card-title-text">📊 جدول المرضى والمدفوعات الكلية وتوزيع الحصص</div>
@@ -610,6 +598,7 @@ const todayISO = now.toISOString().split('T')[0];
 const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
 
 document.getElementById('history-month-select').value = currentYearMonth;
+document.getElementById('account-daily-date-select').value = todayISO;
 document.getElementById('exp-date').value = todayISO;
 document.getElementById('p-custom-date').value = todayISO;
 document.getElementById('today-date').textContent = now.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
@@ -692,7 +681,6 @@ window.filterProcedures = () => {
   const val = document.getElementById('p-procedure').value.toLowerCase();
   const items = document.querySelectorAll('.autocomplete-item');
   let hasVisible = false;
-  
   items.forEach(item => {
     if(item.textContent.toLowerCase().includes(val)) {
       item.style.display = 'block';
@@ -701,7 +689,6 @@ window.filterProcedures = () => {
       item.style.display = 'none';
     }
   });
-  
   document.getElementById('proc-list').classList.toggle('show', hasVisible);
 };
 
@@ -790,13 +777,10 @@ window.openEditBasicModal = (id) => {
   document.getElementById('edit-b-name').value = p.name;
   document.getElementById('edit-b-procedure').value = p.procedure;
   document.getElementById('edit-b-total').value = p.total || 0;
-  
   document.getElementById('edit-basic-modal').classList.add('show');
 };
 
-window.closeEditBasicModal = () => {
-  document.getElementById('edit-basic-modal').classList.remove('show');
-};
+window.closeEditBasicModal = () => document.getElementById('edit-basic-modal').classList.remove('show');
 
 window.saveBasicPatientEdits = async () => {
   const id = document.getElementById('edit-b-id').value;
@@ -805,7 +789,6 @@ window.saveBasicPatientEdits = async () => {
   const total = parseFloat(document.getElementById('edit-b-total').value) || 0;
   
   if(!name || !procedure) { alert('الاسم والإجراء العلاجي حقول مطلوبة'); return; }
-  
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
   
@@ -813,15 +796,11 @@ window.saveBasicPatientEdits = async () => {
   const remaining = total - paid;
   
   try {
-    await updateDoc(doc(db, 'patients', id), {
-      name, procedure, total, remaining
-    });
+    await updateDoc(doc(db, 'patients', id), { name, procedure, total, remaining });
     showToast('تم تحديث البيانات الأساسية بنجاح');
     closeEditBasicModal();
     await loadAllData();
-  } catch(e) {
-    showToast('حدث خطأ أثناء تعديل البيانات', true);
-  }
+  } catch(e) { showToast('حدث خطأ أثناء تعديل البيانات', true); }
 };
 
 window.quickDeletePatient = async (id) => {
@@ -830,13 +809,11 @@ window.quickDeletePatient = async (id) => {
     await deleteDoc(doc(db, 'patients', id));
     showToast('تم حذف المريض بنجاح');
     await loadAllData();
-  } catch(e) {
-    showToast('فشل في حذف المريض', true);
-  }
+  } catch(e) { showToast('فشل في حذف المريض', true); }
 };
 
+// صفحة الحسابات المحدثة
 window.renderAccounts = () => {
-  // الفلترة الذكية للبحث داخل صفحة الحسابات
   const searchVal = document.getElementById('account-patient-search').value.toLowerCase();
   let pts = window._patients;
   
@@ -844,7 +821,44 @@ window.renderAccounts = () => {
     pts = pts.filter(p => p.name.toLowerCase().includes(searchVal));
   }
   
-  // 1. حساب الإحصائيات العامة (التراكمية) لكافة الحالات المتوفرة
+  // دالة مساعدة لتهيئة التاريخ للبحث والمقارنة بدون لخبطة فروق التوقيت
+  const getCleanDateStr = (p) => {
+    if(p.dateStr) return p.dateStr;
+    if(p.createdAt && p.createdAt.seconds) {
+      return new Date(p.createdAt.seconds * 1000).toISOString().split('T')[0];
+    }
+    return '';
+  };
+
+  // ميزة 1: حسابات وتحصيلات اليوم (اليوم المفتوح حالياً بالفلتر)
+  const chosenDailyDate = document.getElementById('account-daily-date-select').value;
+  let dRevenue = 0, dPaid = 0, dDocPaidShare = 0;
+
+  if (chosenDailyDate) {
+    pts.forEach(p => {
+      // إيرادات الكشوفات الجديدة المسجلة في هذا اليوم
+      if(getCleanDateStr(p) === chosenDailyDate) {
+        dRevenue += (p.total || 0);
+      }
+      // إجمالي المبالغ والدفعات المحصلة فعلياً في هذا اليوم (سواء كشف جديد أو دفعة دين قديم)
+      if (p.paymentsList && Array.isArray(p.paymentsList)) {
+        p.paymentsList.forEach(pay => {
+          if (pay && pay.date === chosenDailyDate) {
+            dPaid += (parseFloat(pay.amount) || 0);
+          }
+        });
+      }
+    });
+    dDocPaidShare = dPaid * 0.6;
+  }
+
+  document.getElementById('account-daily-stats').innerHTML = `
+    <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">📅</div><div class="stat-value">${dRevenue.toLocaleString()} ج</div><div class="stat-label">قيمة كشوفات وحالات اليوم</div></div>
+    <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--success)">${dPaid.toLocaleString()} ج</div><div class="stat-label">المبالغ الكاش المحصلة اليوم بالخزينة</div></div>
+    <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${dDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور الصافية من كاش اليوم (60%)</div></div>
+  `;
+
+  // ميزة 2: حساب الإحصائيات العامة (التراكمية) لكافة الحالات المتوفرة تحت خالص
   const tRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
   const tPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
   const tRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
@@ -858,26 +872,17 @@ window.renderAccounts = () => {
     <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>
     <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">صافي حصة الدكتور من الديون (60%)</div></div>`;
 
-  // 2. حساب الملخص المالي الشهري التفصيلي
+  // ميزة 3: حساب الملخص المالي الشهري التفصيلي (قبل الأخير)
   const chosenMonthStr = document.getElementById('history-month-select').value; 
   let mRevenue = 0, mPaid = 0, mRemaining = 0, mDocPaidShare = 0, mDocRemainingShare = 0;
 
   if (chosenMonthStr) {
     const [year, month] = chosenMonthStr.split('-').map(Number);
-    
     pts.forEach(p => {
-      let pDate = null;
-      if (p.dateStr) {
-        pDate = new Date(p.dateStr);
-      } else if (p.createdAt && p.createdAt.seconds) {
-        pDate = new Date(p.createdAt.seconds * 1000);
-      }
-
-      if (pDate && !isNaN(pDate.getTime())) {
-        const pYear = pDate.getFullYear();
-        const pMonth = pDate.getMonth() + 1;
-
-        if (pYear === year && pMonth === month) {
+      const pDateStr = getCleanDateStr(p);
+      if (pDateStr) {
+        const pDate = new Date(pDateStr);
+        if (pDate.getFullYear() === year && (pDate.getMonth() + 1) === month) {
           mRevenue += (p.total || 0);
           mRemaining += (p.remaining || 0);
         }
@@ -887,19 +892,13 @@ window.renderAccounts = () => {
         p.paymentsList.forEach(pay => {
           if(pay && pay.date) {
             const payDate = new Date(pay.date);
-            if (!isNaN(payDate.getTime())) {
-              const payYear = payDate.getFullYear();
-              const payMonth = payDate.getMonth() + 1;
-              
-              if (payYear === year && payMonth === month) {
-                mPaid += (parseFloat(pay.amount) || 0);
-              }
+            if (payDate.getFullYear() === year && (payDate.getMonth() + 1) === month) {
+              mPaid += (parseFloat(pay.amount) || 0);
             }
           }
         });
       }
     });
-    
     mDocPaidShare = mPaid * 0.6;
     mDocRemainingShare = mRemaining * 0.6;
   }
@@ -911,23 +910,27 @@ window.renderAccounts = () => {
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${mDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من المحصل هذا الشهر</div></div>
     <div class="stat-card" style="background:#f4f7f9; border: 1px dashed var(--warning);"><div class="stat-icon">⚖️</div><div class="stat-value" style="color:var(--warning)">${mDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من ديون هذا الشهر</div></div>`;
 
-  // 3. عرض جدول الحسابات الرئيسي (المفصل)
+  // 4. عرض جدول الحسابات الرئيسي الأول (التاريخ أصبح أول عمود على اليمين 🏁)
   document.getElementById('accounts-table').innerHTML = `<table>
-    <thead><tr><th>#</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>حصة الدكتور من المدفوع (60%)</th><th>حصة الدكتور من المتبقي (60%)</th><th>تسجيل دفعة</th></tr></thead>
+    <thead><tr><th>التاريخ</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>حصة الدكتور من المدفوع (60%)</th><th>حصة الدكتور من المتبقي (60%)</th><th>إجراء</th></tr></thead>
     <tbody>
-      ${pts.map((p,i) => `<tr>
-        <td>${i+1}</td>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.procedure}</td>
-        <td>${p.total} ج</td>
-        <td style="color:var(--success); font-weight:bold;">${p.paid} ج</td>
-        <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
-        <td style="color:var(--primary); font-weight:bold;">${(p.paid * 0.6).toLocaleString()} ج</td>
-        <td style="color:var(--warning); font-weight:bold;">${(p.remaining * 0.6).toLocaleString()} ج</td>
-        <td><button class="btn btn-edit btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 دفع</button></td>
-      </tr>`).join('')}
+      ${pts.map((p) => {
+        const dStr = p.dateStr ? new Date(p.dateStr).toLocaleDateString('ar-EG') : '-';
+        return `<tr>
+          <td style="color:var(--primary); font-weight:700;">${dStr}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.procedure}</td>
+          <td>${p.total} ج</td>
+          <td style="color:var(--success); font-weight:bold;">${p.paid} ج</td>
+          <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
+          <td style="color:var(--primary); font-weight:bold;">${(p.paid * 0.6).toLocaleString()} ج</td>
+          <td style="color:var(--warning); font-weight:bold;">${(p.remaining * 0.6).toLocaleString()} ج</td>
+          <td><button class="btn btn-edit btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 دفع</button></td>
+        </tr>`
+      }).join('')}
       <tr class="table-total-row">
-        <td colspan="3">المجموع المالي للحالات المعروضة:</td>
+        <td>إجمالي المعروض:</td>
+        <td colspan="2"></td>
         <td>${tRevenue.toLocaleString()} ج</td>
         <td style="color:var(--success)">${tPaid.toLocaleString()} ج</td>
         <td style="color:var(--danger)">${tRemaining.toLocaleString()} ج</td>
@@ -937,23 +940,27 @@ window.renderAccounts = () => {
       </tr>
     </tbody></table>`;
 
-  // 4. عرض جدول الديون والملخصات المتأخرة
+  // 5. عرض جدول الديون والمتأخرات الثاني (التاريخ أصبح أول عمود على اليمين 🏁)
   const debtors = pts.filter(p => p.remaining > 0);
   const totalDebtorsRem = debtors.reduce((s,p)=>s+p.remaining,0);
   const totalDebtorsDocRem = totalDebtorsRem * 0.6;
 
   document.getElementById('debtors-table').innerHTML = debtors.length ? `<table>
-    <thead><tr><th>#</th><th>المريض</th><th>المتبقي المطلوب حالياً</th><th>حصة الطبيب من المتبقي</th><th>إجراء</th></tr></thead>
+    <thead><tr><th>التاريخ</th><th>المريض</th><th>المتبقي المطلوب حالياً</th><th>حصة الطبيب من المتبقي</th><th>إجراء</th></tr></thead>
     <tbody>
-      ${debtors.map((p,i) => `<tr>
-        <td>${i+1}</td>
-        <td><strong style="color:var(--danger)">${p.name}</strong></td>
-        <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
-        <td style="color:var(--warning); font-weight:bold;">${p.remaining * 0.6} ج</td>
-        <td><button class="btn btn-success btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 إضافة دفعة</button></td>
-      </tr>`).join('')}
+      ${debtors.map((p) => {
+        const dStr = p.dateStr ? new Date(p.dateStr).toLocaleDateString('ar-EG') : '-';
+        return `<tr>
+          <td style="color:var(--primary); font-weight:700;">${dStr}</td>
+          <td><strong style="color:var(--danger)">${p.name}</strong></td>
+          <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
+          <td style="color:var(--warning); font-weight:bold;">${p.remaining * 0.6} ج</td>
+          <td><button class="btn btn-success btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 إضافة دفعة</button></td>
+        </tr>`
+      }).join('')}
       <tr class="table-total-row">
-        <td colspan="2">إجمالي الديون القائمة المطلوبة:</td>
+        <td>إجمالي الديون القائمة:</td>
+        <td></td>
         <td style="color:var(--danger)">${totalDebtorsRem.toLocaleString()} ج</td>
         <td style="color:var(--warning)">${totalDebtorsDocRem.toLocaleString()} ج</td>
         <td></td>
