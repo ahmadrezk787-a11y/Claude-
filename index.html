@@ -347,10 +347,11 @@
       <div class="card">
         <div class="card-title">📋 بيانات المريض الأساسية</div>
         <div class="form-grid">
-          <div class="field-group">
-            <label>اسم المريض *</label>
-            <input type="text" id="p-name" placeholder="الاسم كاملاً"/>
-          </div>
+          <div class="field-group autocomplete-wrap" id="patient-wrapper">
+    <label>* اسم المريض</label>
+    <input type="text" id="p-name" placeholder="الاسم كاملاً" oninput="searchPatients()"/>
+    <div class="autocomplete-list" id="patient-list"></div>
+</div>
           <div class="field-group">
             <label>تاريخ تسجيل المريض <span>(يمكنك تغييره لتاريخ قديم)</span></label>
             <input type="date" id="p-custom-date"/>
