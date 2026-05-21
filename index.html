@@ -153,6 +153,14 @@
   .btn-edit { background:#3498db; color:white; }
   .btn-edit:hover { background:#2980b9; }
   .btn-sm { padding:6px 12px; font-size:12px; border-radius:8px; }
+  
+  /* الأزرار المصغرة الذكية للاجراءات السريعة */
+  .btn-action-sm { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; border: none; cursor: pointer; transition: all 0.2s; color: white; }
+  .btn-action-edit { background-color: #2da44e; }
+  .btn-action-edit:hover { background-color: #2c974b; transform: translateY(-1px); }
+  .btn-action-del { background-color: var(--danger); }
+  .btn-action-del:hover { background-color: #bd2d39; transform: translateY(-1px); }
+  .actions-cell-gap { display: flex; gap: 6px; align-items: center; }
 
   /* TABLE */
   .table-wrap { overflow-x:auto; }
@@ -179,6 +187,7 @@
     max-height:90vh; overflow-y:auto; box-shadow:0 30px 80px rgba(0,0,0,0.3);
     animation: slideUp 0.3s ease;
   }
+  .modal-mini { max-width: 500px; }
   .modal-header {
     padding:20px 24px; border-bottom:1px solid var(--border);
     display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:white; z-index:1;
@@ -524,6 +533,41 @@
     <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
+
+<div class="modal-overlay" id="edit-basic-modal">
+  <div class="modal modal-mini">
+    <div class="modal-header">
+      <h3>✏️ تعديل بيانات المريض الأساسية</h3>
+      <button class="modal-close" onclick="closeEditBasicModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-b-id" />
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="field-group">
+          <label>اسم المريض *</label>
+          <input type="text" id="edit-b-name" />
+        </div>
+        <div class="field-group">
+          <label>رقم الهاتف</label>
+          <input type="tel" id="edit-b-phone" />
+        </div>
+        <div class="field-group">
+          <label>الإجراء الطبي *</label>
+          <input type="text" id="edit-b-procedure" />
+        </div>
+        <div class="field-group">
+          <label>التكلفة الكلية (جنيه) *</label>
+          <input type="number" id="edit-b-total" />
+        </div>
+      </div>
+      <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn btn-success btn-sm" onclick="saveBasicPatientEdits()">💾 حفظ التعديلات</button>
+        <button class="btn btn-sm" style="background:var(--border); color:var(--text);" onclick="closeEditBasicModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -556,7 +600,6 @@ document.getElementById('today-date').textContent = now.toLocaleDateString('ar-E
 window.addEventListener('DOMContentLoaded', () => {
   loadAllData();
   
-  // إغلاق قائمة الإجراءات تلقائياً عند الضغط في أي مكان خارجها
   document.addEventListener('click', (e) => {
     const wrap = document.getElementById('autocomplete-wrapper');
     if (wrap && !wrap.contains(e.target)) {
@@ -653,7 +696,7 @@ window.selectProcedure = (v) => {
 
 window.savePatient = async () => {
   const name = document.getElementById('p-name').value.trim();
-  const phone = document.getElementById('p-phone').value.trim(); // مابقاش إجباري
+  const phone = document.getElementById('p-phone').value.trim();
   const procedure = document.getElementById('p-procedure').value.trim();
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
@@ -697,7 +740,7 @@ window.renderPatients = () => {
   }
 
   document.getElementById('patients-list').innerHTML = `<table>
-    <thead><tr><th>الاسم</th><th>الهاتف</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>تاريخ التسجيل</th><th>الملف الطبي</th></tr></thead>
+    <thead><tr><th>التاريخ</th><th>الاسم</th><th>الهاتف</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>السجل</th><th>إجراءات سريعة</th></tr></thead>
     <tbody>
       ${pts.map(p => {
         let displayDate = '-';
@@ -707,17 +750,81 @@ window.renderPatients = () => {
           displayDate = new Date(p.createdAt.seconds*1000).toLocaleDateString('ar-EG');
         }
         return `<tr>
+          <td style="color:var(--primary); font-weight:700;">${displayDate}</td>
           <td><strong>${p.name}</strong></td>
           <td>${p.phone}</td>
           <td><span class="badge badge-green">${p.procedure}</span></td>
           <td>${p.total} ج</td>
           <td>${p.paid} ج</td>
           <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${p.remaining} ج</span></td>
-          <td>${displayDate}</td>
-          <td><button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 سجل مريض</button></td>
+          <td><button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 السجل الطبي</button></td>
+          <td>
+            <div class="actions-cell-gap">
+              <button class="btn-action-sm btn-action-edit" onclick="openEditBasicModal('${p.id}')" title="تعديل البيانات الأساسية">✏️</button>
+              <button class="btn-action-sm btn-action-del" onclick="quickDeletePatient('${p.id}')" title="حذف سريع">🗑️</button>
+            </div>
+          </td>
         </tr>`
       }).join('')}
     </tbody></table>`;
+};
+
+/* فتح نافذة التعديل السريع للبيانات الأساسية */
+window.openEditBasicModal = (id) => {
+  const p = window._patients.find(x => x.id === id);
+  if(!p) return;
+  document.getElementById('edit-b-id').value = p.id;
+  document.getElementById('edit-b-name').value = p.name;
+  document.getElementById('edit-b-phone').value = p.phone === "بدون رقم" ? "" : p.phone;
+  document.getElementById('edit-b-procedure').value = p.procedure;
+  document.getElementById('edit-b-total').value = p.total || 0;
+  
+  document.getElementById('edit-basic-modal').classList.add('show');
+};
+
+window.closeEditBasicModal = () => {
+  document.getElementById('edit-basic-modal').classList.remove('show');
+};
+
+/* حفظ تعديلات البيانات الأساسية وإعادة حساب المتبقي تلقائياً */
+window.saveBasicPatientEdits = async () => {
+  const id = document.getElementById('edit-b-id').value;
+  const name = document.getElementById('edit-b-name').value.trim();
+  const phone = document.getElementById('edit-b-phone').value.trim() || "بدون رقم";
+  const procedure = document.getElementById('edit-b-procedure').value.trim();
+  const total = parseFloat(document.getElementById('edit-b-total').value) || 0;
+  
+  if(!name || !procedure) { alert('الاسم والإجراء العلاجي حقول مطلوبة'); return; }
+  
+  const p = window._patients.find(x => x.id === id);
+  if(!p) return;
+  
+  // الحفاظ على المدفوع القديم وحساب المتبقي الجديد بناءً على إجمالي التكلفة الجديد
+  const paid = p.paid || 0;
+  const remaining = total - paid;
+  
+  try {
+    await updateDoc(doc(db, 'patients', id), {
+      name, phone, procedure, total, remaining
+    });
+    showToast('تم تحديث البيانات الأساسية بنجاح');
+    closeEditBasicModal();
+    await loadAllData();
+  } catch(e) {
+    showToast('حدث خطأ أثناء تعديل البيانات', true);
+  }
+};
+
+/* حذف سريع من الجدول مباشرة */
+window.quickDeletePatient = async (id) => {
+  if(!confirm('هل تود حذف هذا المريض نهائياً من السيستم؟')) return;
+  try {
+    await deleteDoc(doc(db, 'patients', id));
+    showToast('تم حذف المريض بنجاح');
+    await loadAllData();
+  } catch(e) {
+    showToast('فشل في حذف المريض', true);
+  }
 };
 
 window.renderAccounts = () => {
