@@ -1343,8 +1343,7 @@ function showToast(msg, isError = false) {
     // 1. تحديد نوع البحث
     const type = document.getElementById('p-visit-type').value;
     const query = document.getElementById('p-name').value;
-    const list = document.getElementById('proc-list');
-
+const list = document.getElementById('patient-list');
     // 2. إذا كنا في وضع "متابعة"، ابحث في الأسماء
     if (type === 'followup') {
         const myPatients = ["أحمد محمد", "سارة محمود", "خالد علي", "منى حسن"]; 
