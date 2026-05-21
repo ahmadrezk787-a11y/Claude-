@@ -615,29 +615,6 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-async function loadAllData() {
-  try {
-    const qP = query(collection(db,'patients'), orderBy('createdAt','desc'));
-    const snapP = await getDocs(qP);
-    window._patients = snapP.docs.map(d => ({id:d.id, ...d.data()}));
-    
-    const qS = query(collection(db,'shortages'), orderBy('createdAt','desc'));
-    const snapS = await getDocs(qS);
-    window._shortages = snapS.docs.map(d => ({id:d.id, ...d.data()}));
-
-    const qE = query(collection(db,'expenses'), orderBy('date','desc'));
-    const snapE = await getDocs(qE);
-    window._expenses = snapE.docs.map(d => ({id:d.id, ...d.data()}));
-    
-    if(document.getElementById('page-patients').classList.contains('active')) renderPatients();
-    if(document.getElementById('page-accounts').classList.contains('active')) renderAccounts();
-    if(document.getElementById('page-expenses').classList.contains('active')) renderExpenses();
-    if(document.getElementById('page-shortage').classList.contains('active')) renderShortages();
-  } catch(e) {
-    showToast('حدث خطأ أثناء تحميل البيانات السحابية', true);
-  }
-}
-
 // دالة تنظيف ومقاومة النصوص التخريبية في قاعدة البيانات لضمان قراءة الأرقام بشكل سليم
 function cleanNumber(val) {
   if (val === undefined || val === null) return 0;
@@ -647,6 +624,17 @@ function cleanNumber(val) {
   let str = String(val).replace(/Exchange:/gi, '').replace(/Exchange/gi, '').replace(/[:]/g, '').replace(/جنيه/g, '').replace(/ج/g, '').replace(/[^\d.]/g, '');
   let num = parseFloat(str);
   return isNaN(num) ? 0 : num;
+}
+
+// دالة معالجة النصوص والتواريخ لتوحيد الأصفار (مثال: تحويل 2026-5-9 إلى 2026-05-09) لمنع قراءة الأصفار كقيمة خالية
+function cleanDateStr(str) {
+  if(!str) return "";
+  let cleanStr = String(str).replace(/Exchange:/gi, '').replace(/Exchange/gi, '').trim();
+  const parts = cleanStr.split('-');
+  if(parts.length === 3) {
+    return parts[0] + "-" + String(parts[1]).padStart(2, '0') + "-" + String(parts[2]).padStart(2, '0');
+  }
+  return cleanStr;
 }
 
 // دالة توحيد تنسيق التاريخ المكتوب والمسجل سحابياً بشكل كامل وصارم لمطابقة الأيام القديمة بنجاح وبدون أخطاء
@@ -663,15 +651,82 @@ function getFormattedPatientDate(p) {
   return cleanDateStr(targetDate);
 }
 
-// دالة معالجة النصوص والتواريخ لتوحيد الأصفار (مثال: تحويل 2026-5-9 إلى 2026-05-09) لمنع قراءة الأصفار كقيمة خالية
-function cleanDateStr(str) {
-  if(!str) return "";
-  let cleanStr = String(str).replace(/Exchange:/gi, '').replace(/Exchange/gi, '').trim();
-  const parts = cleanStr.split('-');
-  if(parts.length === 3) {
-    return parts[0] + "-" + String(parts[1]).padStart(2, '0') + "-" + String(parts[2]).padStart(2, '0');
+async function loadAllData() {
+  try {
+    const qP = query(collection(db,'patients'), orderBy('createdAt','desc'));
+    const snapP = await getDocs(qP);
+    let rawPatients = snapP.docs.map(d => ({id:d.id, ...d.data()}));
+    
+    // 🧠 ميزة الإصلاح الذاتي والتطهير التلقائي للبيانات القديمة المعلقة في السحاب 🧠
+    for (let p of rawPatients) {
+      let needsFix = false;
+      let fixedDateStr = p.dateStr || "";
+      let fixedPaymentsList = p.paymentsList || [];
+      
+      // 1. فحص وتطهير تاريخ الحالة الأساسي
+      if (!p.dateStr || p.dateStr.includes("Exchange") || p.dateStr.includes(":")) {
+        fixedDateStr = getFormattedPatientDate(p);
+        needsFix = true;
+      } else {
+        let cleaned = cleanDateStr(p.dateStr);
+        if (cleaned !== p.dateStr) {
+          fixedDateStr = cleaned;
+          needsFix = true;
+        }
+      }
+      
+      // 2. فحص وتطهير تواريخ قائمة المدفوعات التاريخية للمريض القديم
+      if (p.paymentsList && Array.isArray(p.paymentsList)) {
+        fixedPaymentsList = p.paymentsList.map(pay => {
+          if (pay && pay.date && (pay.date.includes("Exchange") || pay.date.includes(":"))) {
+            needsFix = true;
+            return { amount: cleanNumber(pay.amount), date: cleanDateStr(pay.date) };
+          }
+          if (pay && pay.date) {
+            let cl = cleanDateStr(pay.date);
+            if (cl !== pay.date) { needsFix = true; return { amount: cleanNumber(pay.amount), date: cl }; }
+          }
+          return pay;
+        });
+      }
+
+      // إذا اكتشفنا تشوه في البيانات القديمة، نحدث السحاب فوراً لتنظيفها للأبد وتسميعها في الحسابات التراكمية
+      if (needsFix) {
+        try {
+          const docRef = doc(db, 'patients', p.id);
+          await updateDoc(docRef, {
+            dateStr: fixedDateStr,
+            paymentsList: fixedPaymentsList,
+            total: cleanNumber(p.total),
+            paid: cleanNumber(p.paid),
+            remaining: cleanNumber(p.total) - cleanNumber(p.paid)
+          });
+          p.dateStr = fixedDateStr;
+          p.paymentsList = fixedPaymentsList;
+          p.total = cleanNumber(p.total);
+          p.paid = cleanNumber(p.paid);
+          p.remaining = p.total - p.paid;
+        } catch(err) { console.error("Auto-fix skipped for row: ", p.id); }
+      }
+    }
+
+    window._patients = rawPatients;
+    
+    const qS = query(collection(db,'shortages'), orderBy('createdAt','desc'));
+    const snapS = await getDocs(qS);
+    window._shortages = snapS.docs.map(d => ({id:d.id, ...d.data()}));
+
+    const qE = query(collection(db,'expenses'), orderBy('date','desc'));
+    const snapE = await getDocs(qE);
+    window._expenses = snapE.docs.map(d => ({id:d.id, ...d.data()}));
+    
+    if(document.getElementById('page-patients').classList.contains('active')) renderPatients();
+    if(document.getElementById('page-accounts').classList.contains('active')) renderAccounts();
+    if(document.getElementById('page-expenses').classList.contains('active')) renderExpenses();
+    if(document.getElementById('page-shortage').classList.contains('active')) renderShortages();
+  } catch(e) {
+    showToast('حدث خطأ أثناء تحميل البيانات السحابية', true);
   }
-  return cleanStr;
 }
 
 window.toggleSidebar = () => {
@@ -1036,10 +1091,10 @@ window.openPaymentTrigger = async (id) => {
   const amt = parseFloat(amtStr);
   const updatedPaid = rPaid + amt;
   const updatedRemaining = rTotal - updatedPaid;
-  const standardizedPaymentDate = cleanDateStr(dateStr);
+  const standardizedDate = cleanDateStr(dateStr);
 
   const arr = p.paymentsList || [];
-  arr.push({ amount: amt, date: standardizedPaymentDate });
+  arr.push({ amount: amt, date: standardizedDate });
 
   try {
     await updateDoc(doc(db, 'patients', id), { paid: updatedPaid, remaining: updatedRemaining, paymentsList: arr });
