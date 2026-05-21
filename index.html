@@ -368,16 +368,12 @@
         <div class="card-title">📋 بيانات المريض الأساسية</div>
         <div class="form-grid">
           <div class="field-group">
-            <label>تاريخ تسجيل المريض <span>(يمكنك تغييره لتاريخ قديم)</span></label>
-            <input type="date" id="p-custom-date"/>
-          </div>
-          <div class="field-group">
             <label>اسم المريض *</label>
             <input type="text" id="p-name" placeholder="الاسم كاملاً"/>
           </div>
           <div class="field-group">
-            <label>رقم الهاتف <span>(اختياري)</span></label>
-            <input type="tel" id="p-phone" placeholder="01xxxxxxxxx (يمكن تركه فارغاً)"/>
+            <label>تاريخ تسجيل المريض <span>(يمكنك تغييره لتاريخ قديم)</span></label>
+            <input type="date" id="p-custom-date"/>
           </div>
           <div class="field-group full">
             <label>الإجراء الطبي العلاجي *</label>
@@ -429,7 +425,7 @@
           <h2>👥 ملف المرضى السريع</h2>
           <p>استعراض وبحث بيانات الحالات الطبية (اضغط على اسم المريض لفتح سجله)</p>
         </div>
-        <input type="text" class="search-input" id="patient-search" placeholder="🔍 بحث باسم أو هاتف..." oninput="renderPatients()"/>
+        <input type="text" class="search-input" id="patient-search" placeholder="🔍 بحث باسم المريض..." oninput="renderPatients()"/>
       </div>
       <div class="card"><div id="patients-list" class="table-wrap"></div></div>
     </div>
@@ -564,10 +560,6 @@
           <input type="text" id="edit-b-name" />
         </div>
         <div class="field-group">
-          <label>رقم الهاتف</label>
-          <input type="tel" id="edit-b-phone" />
-        </div>
-        <div class="field-group">
           <label>الإجراء الطبي *</label>
           <input type="text" id="edit-b-procedure" />
         </div>
@@ -613,7 +605,7 @@ const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).pa
 
 document.getElementById('history-month-select').value = currentYearMonth;
 document.getElementById('exp-date').value = todayISO;
-document.getElementById('p-custom-date').value = todayISO; // تعيين تاريخ اليوم كقيمة افتراضية
+document.getElementById('p-custom-date').value = todayISO;
 document.getElementById('today-date').textContent = now.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -715,12 +707,9 @@ window.selectProcedure = (v) => {
 
 window.savePatient = async () => {
   const name = document.getElementById('p-name').value.trim();
-  const phone = document.getElementById('p-phone').value.trim();
   const procedure = document.getElementById('p-procedure').value.trim();
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
-  
-  // قراءة التاريخ المخصص المختار من الواجهة
   const chosenDate = document.getElementById('p-custom-date').value || new Date().toISOString().split('T')[0];
   
   if(!name || !procedure) { alert('برجاء تعبئة اسم المريض والإجراء العلاجي المتبع أولاً'); return; }
@@ -729,11 +718,11 @@ window.savePatient = async () => {
   const list = paid > 0 ? [{ amount: paid, date: chosenDate }] : [];
 
   const data = {
-    name, phone: phone || "بدون رقم", procedure, total, paid, remaining,
+    name, procedure, total, paid, remaining,
     paymentsList: list,
     notes: "", xrays: [],
     createdAt: serverTimestamp(),
-    dateStr: chosenDate // حفظ التاريخ المختار بشكل مخصص في قاعدة البيانات
+    dateStr: chosenDate
   };
 
   try {
@@ -745,7 +734,7 @@ window.savePatient = async () => {
 };
 
 window.clearForm = () => {
-  ['p-name','p-phone','p-procedure','p-total','p-paid'].forEach(id => document.getElementById(id).value='');
+  ['p-name','p-procedure','p-total','p-paid'].forEach(id => document.getElementById(id).value='');
   document.getElementById('p-custom-date').value = new Date().toISOString().split('T')[0];
   window.calcFinance();
 };
@@ -753,7 +742,7 @@ window.clearForm = () => {
 window.renderPatients = () => {
   const s = document.getElementById('patient-search').value.toLowerCase();
   let pts = window._patients;
-  if(s) pts = pts.filter(p => p.name.toLowerCase().includes(s) || p.phone.includes(s));
+  if(s) pts = pts.filter(p => p.name.toLowerCase().includes(s));
   
   if(!pts.length) {
     document.getElementById('patients-list').innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>لا يوجد مرضى مطابقون للبحث</p></div>`;
@@ -761,7 +750,7 @@ window.renderPatients = () => {
   }
 
   document.getElementById('patients-list').innerHTML = `<table>
-    <thead><tr><th>التاريخ</th><th>الاسم (اضغط للملف)</th><th>الهاتف</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>إجراءات سريعة</th></tr></thead>
+    <thead><tr><th>التاريخ</th><th>الاسم (اضغط للملف)</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>إجراءات سريعة</th></tr></thead>
     <tbody>
       ${pts.map(p => {
         let displayDate = '-';
@@ -773,7 +762,6 @@ window.renderPatients = () => {
         return `<tr>
           <td style="color:var(--primary); font-weight:700;">${displayDate}</td>
           <td><strong class="patient-clickable-name" onclick="openPatientModal('${p.id}')">${p.name}</strong></td>
-          <td>${p.phone}</td>
           <td><span class="badge badge-green">${p.procedure}</span></td>
           <td>${p.total} ج</td>
           <td>${p.paid} ج</td>
@@ -789,13 +777,11 @@ window.renderPatients = () => {
     </tbody></table>`;
 };
 
-/* فتح نافذة التعديل السريع للبيانات الأساسية */
 window.openEditBasicModal = (id) => {
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
   document.getElementById('edit-b-id').value = p.id;
   document.getElementById('edit-b-name').value = p.name;
-  document.getElementById('edit-b-phone').value = p.phone === "بدون رقم" ? "" : p.phone;
   document.getElementById('edit-b-procedure').value = p.procedure;
   document.getElementById('edit-b-total').value = p.total || 0;
   
@@ -806,11 +792,9 @@ window.closeEditBasicModal = () => {
   document.getElementById('edit-basic-modal').classList.remove('show');
 };
 
-/* حفظ تعديلات البيانات الأساسية وإعادة حساب المتبقي تلقائياً */
 window.saveBasicPatientEdits = async () => {
   const id = document.getElementById('edit-b-id').value;
   const name = document.getElementById('edit-b-name').value.trim();
-  const phone = document.getElementById('edit-b-phone').value.trim() || "بدون رقم";
   const procedure = document.getElementById('edit-b-procedure').value.trim();
   const total = parseFloat(document.getElementById('edit-b-total').value) || 0;
   
@@ -824,7 +808,7 @@ window.saveBasicPatientEdits = async () => {
   
   try {
     await updateDoc(doc(db, 'patients', id), {
-      name, phone, procedure, total, remaining
+      name, procedure, total, remaining
     });
     showToast('تم تحديث البيانات الأساسية بنجاح');
     closeEditBasicModal();
@@ -834,7 +818,6 @@ window.saveBasicPatientEdits = async () => {
   }
 };
 
-/* حذف سريع من الجدول مباشرة */
 window.quickDeletePatient = async (id) => {
   if(!confirm('هل تود حذف هذا المريض نهائياً من السيستم؟')) return;
   try {
@@ -944,18 +927,17 @@ window.renderAccounts = () => {
   const totalDebtorsDocRem = totalDebtorsRem * 0.6;
 
   document.getElementById('debtors-table').innerHTML = debtors.length ? `<table>
-    <thead><tr><th>#</th><th>المريض</th><th>رقم الهاتف</th><th>المتبقي المطلوب حالياً</th><th>حصة الطبيب من المتبقي</th><th>إجراء</th></tr></thead>
+    <thead><tr><th>#</th><th>المريض</th><th>المتبقي المطلوب حالياً</th><th>حصة الطبيب من المتبقي</th><th>إجراء</th></tr></thead>
     <tbody>
       ${debtors.map((p,i) => `<tr>
         <td>${i+1}</td>
         <td><strong style="color:var(--danger)">${p.name}</strong></td>
-        <td>${p.phone}</td>
         <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
         <td style="color:var(--warning); font-weight:bold;">${p.remaining * 0.6} ج</td>
         <td><button class="btn btn-success btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 إضافة دفعة</button></td>
       </tr>`).join('')}
       <tr class="table-total-row">
-        <td colspan="3">إجمالي الديون القائمة المطلوبة:</td>
+        <td colspan="2">إجمالي الديون القائمة المطلوبة:</td>
         <td style="color:var(--danger)">${totalDebtorsRem.toLocaleString()} ج</td>
         <td style="color:var(--warning)">${totalDebtorsDocRem.toLocaleString()} ج</td>
         <td></td>
@@ -1061,7 +1043,6 @@ window.openPatientModal = (id) => {
   
   document.getElementById('modal-body').innerHTML = `
     <div class="patient-info-grid">
-      <div class="info-item"><label>رقم الهاتف</label><p>${p.phone}</p></div>
       <div class="info-item"><label>الإجراء العلاجي</label><p>${p.procedure}</p></div>
       <div class="info-item"><label>إجمالي التكلفة</label><p>${p.total} جنيه</p></div>
       <div class="info-item"><label>المسدد الكلي</label><p style="color:var(--success)">${p.paid} جنيه</p></div>
