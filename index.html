@@ -289,13 +289,6 @@
           <div class="card-title-text">📝 معلومات المريض الأساسية</div>
         </div>
         <div class="form-grid">
-          <div class="field-group">
-            <label>نوع الزيارة</label>
-            <select id="p-visit-type" onchange="toggleVisitMode()">
-              <option value="new">مريض جديد</option>
-              <option value="followup">متابعة (مريض سابق)</option>
-            </select>
-          </div>
           <div class="field-group autocomplete-wrap" id="name-wrap">
             <label>اسم المريض <span>(كامل)</span></label>
             <input type="text" id="p-name" placeholder="الاسم كاملاً" oninput="searchPatients()"/>
@@ -499,8 +492,6 @@ window.where = where;
 window._patients = [];
 window._shortages = [];
 window._procedures = ['حشو أسنان', 'خلع ضرس', 'تنظيف أسنان', 'علاج عصب', 'تركيب تاج', 'تقويم أسنان', 'زراعة أسنان', 'تبييض أسنان', 'جير أسنان', 'حشو عصب', 'خلع ضرس عقل'];
-
-// متغير لحفظ ID المريض المختار في حالة المتابعة
 window._selectedPatientId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -546,7 +537,6 @@ window.calcFinance = () => {
   document.getElementById('calc-remaining').className = 'calc-value ' + (remaining > 0 ? 'orange' : (remaining < 0 ? 'red' : 'green'));
 };
 
-// تعديل دالة toggleVisitMode لتدعم البحث في المرضى الحقيقيين
 window.toggleVisitMode = function() {
   const type = document.getElementById('p-visit-type').value;
   const input = document.getElementById('p-name');
@@ -555,7 +545,6 @@ window.toggleVisitMode = function() {
     input.placeholder = "ابحث عن اسم المريض...";
     input.value = '';
     window._selectedPatientId = null;
-    // تفريغ باقي الحقول
     document.getElementById('p-phone').value = '';
     document.getElementById('p-age').value = '';
     document.getElementById('p-procedure').value = '';
@@ -570,14 +559,12 @@ window.toggleVisitMode = function() {
   }
 };
 
-// تعديل دالة searchPatients للبحث في المرضى الحقيقيين أو الإجراءات
 window.searchPatients = function() {
-  const type = document.getElementById('p-visit-type').value;
+  const type = document.getElementById('p-visit-type')?.value || 'new';
   const query = document.getElementById('p-name').value.trim().toLowerCase();
   const list = document.getElementById('patient-list');
   
   if (type === 'followup' && query.length > 0) {
-    // البحث في المرضى المسجلين فعلياً
     const filtered = window._patients.filter(p => 
       p.name && p.name.toLowerCase().includes(query)
     );
@@ -598,25 +585,18 @@ window.searchPatients = function() {
   }
 };
 
-// دالة جديدة لاختيار المريض في حالة المتابعة
 window.selectPatientForFollowup = function(patientId) {
   const patient = window._patients.find(p => p.id === patientId);
   if (!patient) return;
   
-  // حفظ ID المريض
   window._selectedPatientId = patientId;
-  
-  // ملء البيانات
   document.getElementById('p-name').value = patient.name;
   document.getElementById('p-phone').value = patient.phone || '';
   document.getElementById('p-age').value = patient.age || '';
   document.getElementById('p-gender').value = patient.gender || 'ذكر';
   document.getElementById('p-notes').value = patient.notes || '';
-  
-  // إخفاء القائمة
   document.getElementById('patient-list').classList.remove('show');
   document.getElementById('name-wrap').classList.remove('list-open');
-  
   showToast('تم اختيار المريض - يمكنك إضافة الإجراء الجديد الآن');
 };
 
@@ -646,7 +626,7 @@ window.selectProc = (proc) => {
 };
 
 window.savePatient = async () => {
-  const visitType = document.getElementById('p-visit-type').value;
+  const visitType = document.getElementById('p-visit-type')?.value || 'new';
   const name = document.getElementById('p-name').value.trim();
   const phone = document.getElementById('p-phone').value.trim();
   const age = document.getElementById('p-age').value.trim();
@@ -666,15 +646,10 @@ window.savePatient = async () => {
   
   try {
     if (visitType === 'followup' && window._selectedPatientId) {
-      // حالة المتابعة - تحديث بيانات المريض الموجود
       const patient = window._patients.find(p => p.id === window._selectedPatientId);
-      
-      // حساب الأرقام الجديدة
       const newTotalCost = cleanNumber(patient.cost) + cost;
       const newTotalPaid = cleanNumber(patient.paid) + paid;
       const newRemaining = newTotalCost - newTotalPaid;
-      
-      // إضافة الدفعة الجديدة للسجل
       const updatedPaymentsList = patient.paymentsList || [];
       if (paid > 0) {
         updatedPaymentsList.push({
@@ -684,7 +659,6 @@ window.savePatient = async () => {
         });
       }
       
-      // تحديث البيانات
       await updateDoc(doc(db, 'patients', window._selectedPatientId), {
         cost: newTotalCost,
         paid: newTotalPaid,
@@ -700,7 +674,6 @@ window.savePatient = async () => {
       showToast('✅ تم تحديث بيانات المريض وإضافة الزيارة الجديدة');
       window._selectedPatientId = null;
     } else {
-      // حالة مريض جديد - إنشاء سجل جديد
       const paymentsList = paid > 0 ? [{
         amount: paid,
         date: date,
@@ -717,8 +690,7 @@ window.savePatient = async () => {
       showToast('✅ تم إضافة المريض بنجاح');
     }
     
-    // تفريغ النموذج
-    document.getElementById('p-visit-type').value = 'new';
+    if(document.getElementById('p-visit-type')) document.getElementById('p-visit-type').value = 'new';
     document.getElementById('p-name').value = '';
     document.getElementById('p-phone').value = '';
     document.getElementById('p-age').value = '';
@@ -728,7 +700,7 @@ window.savePatient = async () => {
     document.getElementById('p-notes').value = '';
     document.getElementById('p-date').valueAsDate = new Date();
     calcFinance();
-    toggleVisitMode();
+    if(window.toggleVisitMode) toggleVisitMode();
     
     await loadAllData();
   } catch(e) {
@@ -853,8 +825,7 @@ window.editPatient = async (id) => {
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
   
-  // ملء النموذج بالبيانات الحالية
-  document.getElementById('p-visit-type').value = 'new';
+  if(document.getElementById('p-visit-type')) document.getElementById('p-visit-type').value = 'new';
   document.getElementById('p-name').value = p.name;
   document.getElementById('p-phone').value = p.phone || '';
   document.getElementById('p-age').value = p.age || '';
@@ -868,7 +839,6 @@ window.editPatient = async (id) => {
   calcFinance();
   showPage('add-patient');
   
-  // حذف السجل القديم لأنه سيتم إنشاء سجل جديد عند الحفظ
   try {
     await deleteDoc(doc(db, 'patients', id));
     await loadAllData();
@@ -913,7 +883,7 @@ window.openPatientModal = (id) => {
     </div>
     <div class="section-title">📊 تفاصيل سجل الدفعات النقدية التاريخية</div>
     <div style="background:var(--bg); border-radius:10px; padding:12px; max-height:150px; overflow-y:auto;">
-      ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة: <strong>${cleanNumber(py.amount).toLocaleString()} ج</strong> - ${py.procedure || 'إجراء غير محدد'}</span><span>📅 تاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
+      ${(p.paymentsList||[]).map(py => `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;"><span>💰 دفعة: <strong>${cleanNumber(py.amount).toLocaleString()} ج</strong></span><span>📅 تاريخ: ${py.date}</span></div>`).join('') || 'لا توجد دفعات نقدية مسجلة مسبقاً.'}
     </div>
     <div style="margin-top:24px; display:flex; justify-content:space-between;">
       <button class="btn btn-success" onclick="savePatientModalChanges('${p.id}')">💾 حفظ الملاحظات الطبية</button>
@@ -1012,6 +982,22 @@ function showToast(msg, isError = false) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
+</script>
+<script>
+  window.addEventListener('load', function() {
+    const container = document.querySelector('.form-grid');
+    const div = document.createElement('div');
+    div.className = 'field-group';
+    div.innerHTML = `
+      <label>نوع الزيارة</label>
+      <select id="p-visit-type" onchange="toggleVisitMode()">
+        <option value="new">مريض جديد</option>
+        <option value="followup">متابعة (مريض سابق)</option>
+      </select>
+    `;
+    const nameField = document.querySelector('#p-name').parentElement;
+    container.insertBefore(div, nameField);
+  });
 </script>
 </body>
 </html>
