@@ -175,6 +175,18 @@
   .badge-red { background:#ffebeb; color:var(--danger); }
   .badge-orange { background:#fff3e0; color:var(--warning); }
 
+  /* اسم المريض كزر قابل للضغط لفتح الملف */
+  .patient-clickable-name {
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: 700;
+    transition: color 0.15s ease;
+  }
+  .patient-clickable-name:hover {
+    color: #3498db;
+    text-decoration: underline;
+  }
+
   /* PATIENT MODAL */
   .modal-overlay {
     position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200;
@@ -350,11 +362,15 @@
           <h2>➕ إضافة مريض جديد</h2>
           <p>أدخل بيانات المريض والإجراء الطبي</p>
         </div>
-        <span class="date-badge">📅 <span id="today-date"></span></span>
+        <span class="date-badge">📅 تاريخ اليوم المرجعي: <span id="today-date"></span></span>
       </div>
       <div class="card">
         <div class="card-title">📋 بيانات المريض الأساسية</div>
         <div class="form-grid">
+          <div class="field-group">
+            <label>تاريخ تسجيل المريض <span>(يمكنك تغييره لتاريخ قديم)</span></label>
+            <input type="date" id="p-custom-date"/>
+          </div>
           <div class="field-group">
             <label>اسم المريض *</label>
             <input type="text" id="p-name" placeholder="الاسم كاملاً"/>
@@ -411,7 +427,7 @@
       <div class="page-header">
         <div>
           <h2>👥 ملف المرضى السريع</h2>
-          <p>استعراض وبحث بيانات الحالات الطبية</p>
+          <p>استعراض وبحث بيانات الحالات الطبية (اضغط على اسم المريض لفتح سجله)</p>
         </div>
         <input type="text" class="search-input" id="patient-search" placeholder="🔍 بحث باسم أو هاتف..." oninput="renderPatients()"/>
       </div>
@@ -592,9 +608,12 @@ window._shortages = [];
 window._expenses = [];
 
 const now = new Date();
+const todayISO = now.toISOString().split('T')[0];
 const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
+
 document.getElementById('history-month-select').value = currentYearMonth;
-document.getElementById('exp-date').value = now.toISOString().split('T')[0];
+document.getElementById('exp-date').value = todayISO;
+document.getElementById('p-custom-date').value = todayISO; // تعيين تاريخ اليوم كقيمة افتراضية
 document.getElementById('today-date').textContent = now.toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'});
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -701,19 +720,20 @@ window.savePatient = async () => {
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
   
+  // قراءة التاريخ المخصص المختار من الواجهة
+  const chosenDate = document.getElementById('p-custom-date').value || new Date().toISOString().split('T')[0];
+  
   if(!name || !procedure) { alert('برجاء تعبئة اسم المريض والإجراء العلاجي المتبع أولاً'); return; }
 
   const remaining = total - paid;
-  const todayStr = new Date().toISOString().split('T')[0];
-  
-  const list = paid > 0 ? [{ amount: paid, date: todayStr }] : [];
+  const list = paid > 0 ? [{ amount: paid, date: chosenDate }] : [];
 
   const data = {
     name, phone: phone || "بدون رقم", procedure, total, paid, remaining,
     paymentsList: list,
     notes: "", xrays: [],
     createdAt: serverTimestamp(),
-    dateStr: todayStr
+    dateStr: chosenDate // حفظ التاريخ المختار بشكل مخصص في قاعدة البيانات
   };
 
   try {
@@ -726,6 +746,7 @@ window.savePatient = async () => {
 
 window.clearForm = () => {
   ['p-name','p-phone','p-procedure','p-total','p-paid'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('p-custom-date').value = new Date().toISOString().split('T')[0];
   window.calcFinance();
 };
 
@@ -740,7 +761,7 @@ window.renderPatients = () => {
   }
 
   document.getElementById('patients-list').innerHTML = `<table>
-    <thead><tr><th>التاريخ</th><th>الاسم</th><th>الهاتف</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>السجل</th><th>إجراءات سريعة</th></tr></thead>
+    <thead><tr><th>التاريخ</th><th>الاسم (اضغط للملف)</th><th>الهاتف</th><th>الإجراء العلاجي</th><th>التكلفة الكلية</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>إجراءات سريعة</th></tr></thead>
     <tbody>
       ${pts.map(p => {
         let displayDate = '-';
@@ -751,13 +772,12 @@ window.renderPatients = () => {
         }
         return `<tr>
           <td style="color:var(--primary); font-weight:700;">${displayDate}</td>
-          <td><strong>${p.name}</strong></td>
+          <td><strong class="patient-clickable-name" onclick="openPatientModal('${p.id}')">${p.name}</strong></td>
           <td>${p.phone}</td>
           <td><span class="badge badge-green">${p.procedure}</span></td>
           <td>${p.total} ج</td>
           <td>${p.paid} ج</td>
           <td><span class="badge ${p.remaining>0?'badge-red':'badge-green'}">${p.remaining} ج</span></td>
-          <td><button class="btn btn-edit btn-sm" onclick="openPatientModal('${p.id}')">📂 السجل الطبي</button></td>
           <td>
             <div class="actions-cell-gap">
               <button class="btn-action-sm btn-action-edit" onclick="openEditBasicModal('${p.id}')" title="تعديل البيانات الأساسية">✏️</button>
@@ -799,7 +819,6 @@ window.saveBasicPatientEdits = async () => {
   const p = window._patients.find(x => x.id === id);
   if(!p) return;
   
-  // الحفاظ على المدفوع القديم وحساب المتبقي الجديد بناءً على إجمالي التكلفة الجديد
   const paid = p.paid || 0;
   const remaining = total - paid;
   
@@ -1143,7 +1162,7 @@ window.renderShortages = () => {
   }
   document.getElementById('shortage-list').innerHTML = window._shortages.map(s => `
     <div class="shortage-item">
-      <div><strong>${s.name}</strong> - <span style="font-size:13px; color:var(--text-muted)">المطلوب: ${s.qty || 'غير محدد'}</span><p style="font-size:12px; color:var(--text-muted); margin-top:2px;">${s.note||''}</p></div>
+      <div><strong>${s.name}</strong> - <span style="font-size:13px; color:var(--text-muted)">المطلوب: ${s.qty || 'غير مححدد'}</span><p style="font-size:12px; color:var(--text-muted); margin-top:2px;">${s.note||''}</p></div>
       <button class="btn btn-danger btn-sm" onclick="deleteShortRef('${s.id}')">🗑️ مسح</button>
     </div>
   `).join('');
