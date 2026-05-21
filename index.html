@@ -638,16 +638,34 @@ async function loadAllData() {
   }
 }
 
-// دالة مركزية ومضمونة لتهيئة صيغة التاريخ لعرضه وحسابه بشكل دقيق (تمنع ظهور الشرطة)
+// دالة مضمونة بنسبة 100% لتوحيد تنسيق التاريخ المكتوب والمسجل سحابياً لتجنب مشاكل الصفر
 function getFormattedPatientDate(p) {
+  let targetDate = "";
   if (p.dateStr && p.dateStr.trim() !== "") {
-    return p.dateStr; 
-  }
-  if (p.createdAt && p.createdAt.seconds) {
+    targetDate = p.dateStr.trim();
+  } else if (p.createdAt && p.createdAt.seconds) {
     const d = new Date(p.createdAt.seconds * 1000);
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+    targetDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+  } else {
+    targetDate = new Date().toISOString().split('T')[0];
   }
-  return new Date().toISOString().split('T')[0]; 
+  
+  // لضمان التوافق التام (تحويل الصيغة مثل 2026-5-9 إلى 2026-05-09 برمجياً)
+  const parts = targetDate.split('-');
+  if (parts.length === 3) {
+    return parts[0] + "-" + String(parts[1]).padStart(2, '0') + "-" + String(parts[2]).padStart(2, '0');
+  }
+  return targetDate;
+}
+
+// دالة لتوحيد أي تاريخ نصي خارجي قادم من حقول الإدخال أو قائمة الدفعات لتجنب الفراغات والأصفار الناقصة
+function cleanDateStr(str) {
+  if(!str) return "";
+  const parts = str.trim().split('-');
+  if(parts.length === 3) {
+    return parts[0] + "-" + String(parts[1]).padStart(2, '0') + "-" + String(parts[2]).padStart(2, '0');
+  }
+  return str.trim();
 }
 
 window.toggleSidebar = () => {
@@ -720,14 +738,15 @@ window.savePatient = async () => {
   if(!name || !procedure) { alert('برجاء تعبئة اسم المريض والإجراء العلاجي المتبع أولاً'); return; }
 
   const remaining = total - paid;
-  const list = paid > 0 ? [{ amount: paid, date: chosenDate }] : [];
+  const standardizedDate = cleanDateStr(chosenDate);
+  const list = paid > 0 ? [{ amount: paid, date: standardizedDate }] : [];
 
   const data = {
     name, procedure, total, paid, remaining,
     paymentsList: list,
     notes: "", xrays: [],
     createdAt: serverTimestamp(),
-    dateStr: chosenDate
+    dateStr: standardizedDate
   };
 
   try {
@@ -820,7 +839,7 @@ window.quickDeletePatient = async (id) => {
   } catch(e) { showToast('فشل في حذف المريض', true); }
 };
 
-// حسابات مصلحة ومطورة بالكامل لمنع الشرطة والصفر
+// الدالة المحدثة بالكامل لحساب الإيرادات والمتحصلات اليومية والشهرية بدقة وبدون أصفار
 window.renderAccounts = () => {
   const searchVal = document.getElementById('account-patient-search').value.toLowerCase();
   let pts = window._patients;
@@ -829,26 +848,28 @@ window.renderAccounts = () => {
     pts = pts.filter(p => p.name.toLowerCase().includes(searchVal));
   }
   
-  // 1. حسابات وتحصيلات اليوم (الفورية المحددة)
-  const chosenDailyDate = document.getElementById('account-daily-date-select').value;
-  let dRevenue = 0, dPaid = 0, dDocPaidShare = 0;
+  // 1. حسابات وتحصيلات اليوم (الفورية الدقيقة)
+  const chosenDailyDate = cleanDateStr(document.getElementById('account-daily-date-select').value);
+  let dRevenue = 0, dPaid = 0;
 
   if (chosenDailyDate) {
-    pts.forEach(p => {
+    window._patients.forEach(p => {
       const pDateStr = getFormattedPatientDate(p);
+      // حساب إجمالي قيمة كشوفات اليوم
       if(pDateStr === chosenDailyDate) {
-        dRevenue += (p.total || 0);
+        dRevenue += (parseFloat(p.total) || 0);
       }
+      // حساب المبالغ الكاش المحصلة اليوم الفعلي من قائمة الدفعات
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
-          if (pay && pay.date === chosenDailyDate) {
+          if (pay && cleanDateStr(pay.date) === chosenDailyDate) {
             dPaid += (parseFloat(pay.amount) || 0);
           }
         });
       }
     });
-    dDocPaidShare = dPaid * 0.6;
   }
+  const dDocPaidShare = dPaid * 0.6;
 
   document.getElementById('account-daily-stats').innerHTML = `
     <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">📅</div><div class="stat-value">${dRevenue.toLocaleString()} ج</div><div class="stat-label">قيمة كشوفات وحالات اليوم</div></div>
@@ -856,13 +877,14 @@ window.renderAccounts = () => {
     <div class="stat-card" style="background:#fafffa; border:1px solid #c2e7c2;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${dDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور الصافية من كاش اليوم (60%)</div></div>
   `;
 
-  // 2. حساب الملخص المالي الشهري المصلح (تم تعديل الحصص لمنع الصفر)
+  // 2. الملخص المالي الشهري التفصيلي (تم إصلاح الفلترة الشاملة للدفعات)
   const chosenMonthStr = document.getElementById('history-month-select').value; 
-  let mRevenue = 0, mPaid = 0, mRemaining = 0, mDocPaidShare = 0, mDocRemainingShare = 0;
+  let mRevenue = 0, mPaid = 0, mRemaining = 0;
 
   if (chosenMonthStr) {
     const [year, month] = chosenMonthStr.split('-').map(Number);
-    pts.forEach(p => {
+    
+    window._patients.forEach(p => {
       const pDateStr = getFormattedPatientDate(p);
       if (pDateStr) {
         const parts = pDateStr.split('-');
@@ -870,39 +892,43 @@ window.renderAccounts = () => {
         const pMonth = parseInt(parts[1]);
         
         if (pYear === year && pMonth === month) {
-          mRevenue += (p.total || 0);
-          mRemaining += (p.remaining || 0);
+          mRevenue += (parseFloat(p.total) || 0);
+          mRemaining += (parseFloat(p.remaining) || 0);
         }
       }
       
+      // احتساب كل المبالغ المحصلة داخل هذا الشهر (سواء للمريض الجديد أو دفعات قديمة سددت في هذا الشهر)
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
           if(pay && pay.date) {
-            const payParts = pay.date.split('-');
-            const payYear = parseInt(payParts[0]);
-            const payMonth = parseInt(payParts[1]);
-            if (payYear === year && payMonth === month) {
-              mPaid += (parseFloat(pay.amount) || 0);
+            const payDateClean = cleanDateStr(pay.date);
+            const payParts = payDateClean.split('-');
+            if(payParts.length === 3) {
+              const payYear = parseInt(payParts[0]);
+              const payMonth = parseInt(payParts[1]);
+              if (payYear === year && payMonth === month) {
+                mPaid += (parseFloat(pay.amount) || 0);
+              }
             }
           }
         });
       }
     });
-    mDocPaidShare = mPaid * 0.6;
-    mDocRemainingShare = mRemaining * 0.6;
   }
+  const mDocPaidShare = mPaid * 0.6;
+  const mDocRemainingShare = mRemaining * 0.6;
 
   document.getElementById('account-monthly-stats').innerHTML = `
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">📊</div><div class="stat-value">${mRevenue.toLocaleString()} ج</div><div class="stat-label">إيرادات الكشوفات بالشهر المختار</div></div>
-    <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--success)">${mPaid.toLocaleString()} ج</div><div class="stat-label">إجمالي المبالغ المحصلة خلال الشهر</div></div>
+    <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">💵</div><div class="stat-value" style="color:var(--success)">${mPaid.toLocaleString()} ج</div><div class="stat-label">إجمالي المبلغ المحصل بالشهر</div></div>
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">📉</div><div class="stat-value" style="color:var(--danger)">${mRemaining.toLocaleString()} ج</div><div class="stat-label">الديون المسجلة من حالات هذا الشهر</div></div>
     <div class="stat-card" style="background:#f4f7f9;"><div class="stat-icon">🩺</div><div class="stat-value" style="color:var(--primary)">${mDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من المحصل هذا الشهر (60%)</div></div>
     <div class="stat-card" style="background:#f4f7f9; border: 1px dashed var(--warning);"><div class="stat-icon">⚖️</div><div class="stat-value" style="color:var(--warning)">${mDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور من ديون هذا الشهر (60%)</div></div>`;
 
-  // 3. الحسابات التراكمية العامة (تحت خالص)
-  const tRevenue = pts.reduce((s,p)=>s+(p.total||0),0);
-  const tPaid = pts.reduce((s,p)=>s+(p.paid||0),0);
-  const tRemaining = pts.reduce((s,p)=>s+(p.remaining||0),0);
+  // 3. الحسابات التراكمية العامة والشاملة
+  const tRevenue = window._patients.reduce((s,p)=>s+(parseFloat(p.total)||0),0);
+  const tPaid = window._patients.reduce((s,p)=>s+(parseFloat(p.paid)||0),0);
+  const tRemaining = window._patients.reduce((s,p)=>s+(parseFloat(p.remaining)||0),0);
   const tDocPaidShare = tPaid * 0.6; 
   const tDocRemainingShare = tRemaining * 0.6; 
 
@@ -913,7 +939,7 @@ window.renderAccounts = () => {
     <div class="stat-card"><div class="stat-icon">👨‍⚕️</div><div class="stat-value" style="color:var(--primary)">${tDocPaidShare.toLocaleString()} ج</div><div class="stat-label">حصة الدكتور المحصلة كلياً (60%)</div></div>
     <div class="stat-card" style="border: 1px dashed var(--warning);"><div class="stat-icon">📈</div><div class="stat-value" style="color:var(--warning)">${tDocRemainingShare.toLocaleString()} ج</div><div class="stat-label">صافي حصة الدكتور من الديون (60%)</div></div>`;
 
-  // 4. عرض الجدول الأول (جدول المرضى العام والتاريخ أول خانة بدون شرطة)
+  // 4. عرض الجدول الأول للمرضى
   document.getElementById('accounts-table').innerHTML = `<table>
     <thead><tr><th>التاريخ</th><th>المريض</th><th>الإجراء</th><th>الإجمالي</th><th>المدفوع الكلي</th><th>المتبقي الكلي</th><th>حصة الدكتور من المدفوع (60%)</th><th>حصة الدكتور من المتبقي (60%)</th><th>إجراء</th></tr></thead>
     <tbody>
@@ -927,7 +953,7 @@ window.renderAccounts = () => {
           <td>${p.total} ج</td>
           <td style="color:var(--success); font-weight:bold;">${p.paid} ج</td>
           <td style="color:var(--danger); font-weight:bold;">${p.remaining} ج</td>
-          <td style="color:var(--primary); font-weight:bold;">${(p.paid * 0.6).toLocaleString()} ج</td>
+          <td style="color:var(--primary); font-weight:bold;">Exchange: ${(p.paid * 0.6).toLocaleString()} ج</td>
           <td style="color:var(--warning); font-weight:bold;">${(p.remaining * 0.6).toLocaleString()} ج</td>
           <td><button class="btn btn-edit btn-sm" onclick="openPaymentTrigger('${p.id}')">💳 دفع</button></td>
         </tr>`
@@ -944,7 +970,7 @@ window.renderAccounts = () => {
       </tr>
     </tbody></table>`;
 
-  // 5. عرض الجدول الثاني (جدول الديون والتاريخ أول خانة بدون شرطة)
+  // 5. عرض الجدول الثاني (جدول الديون)
   const debtors = pts.filter(p => p.remaining > 0);
   const totalDebtorsRem = debtors.reduce((s,p)=>s+p.remaining,0);
   const totalDebtorsDocRem = totalDebtorsRem * 0.6;
@@ -985,11 +1011,12 @@ window.openPaymentTrigger = async (id) => {
   if(!dateStr) return;
 
   const amt = parseFloat(amtStr);
-  const updatedPaid = (p.paid || 0) + amt;
-  const updatedRemaining = (p.total || 0) - updatedPaid;
+  const updatedPaid = (parseFloat(p.paid) || 0) + amt;
+  const updatedRemaining = (parseFloat(p.total) || 0) - updatedPaid;
+  const standardizedPaymentDate = cleanDateStr(dateStr);
 
   const arr = p.paymentsList || [];
-  arr.push({ amount: amt, date: dateStr });
+  arr.push({ amount: amt, date: standardizedPaymentDate });
 
   try {
     await updateDoc(doc(db, 'patients', id), { paid: updatedPaid, remaining: updatedRemaining, paymentsList: arr });
@@ -1017,7 +1044,7 @@ window.addExpense = async () => {
   const total = price * qty;
   
   try {
-    await addDoc(collection(db, 'expenses'), { name, date, price, qty, total, createdAt: serverTimestamp() });
+    await addDoc(collection(db, 'expenses'), { name, date: cleanDateStr(date), price, qty, total, createdAt: serverTimestamp() });
     showToast('تم تسجيل الفاتورة والمشتريات بنجاح');
     document.getElementById('exp-name').value = '';
     document.getElementById('exp-price').value = '';
