@@ -77,53 +77,76 @@
   /* CARDS */
   .card {
     background:white; border-radius:16px; padding:24px; margin-bottom:24px;
-    box-shadow:0 2px 12px rgba(0,0,0,0.04); border:1px solid var(--border);
+    box-shadow:0 4px 20px rgba(0,0,0,0.02); border:1px solid var(--border);
   }
   .card-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:20px; display:flex; align-items:center; gap:8px; }
 
   /* FORM */
-  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
   .form-grid .full { grid-column:1/-1; }
-  .field-group { display:flex; flex-direction:column; gap:6px; }
-  .field-group label { font-size:13px; font-weight:600; color:var(--text); }
+  .field-group { display:flex; flex-direction:column; gap:8px; }
+  .field-group label { font-size:13px; font-weight:700; color:var(--primary); }
+  .field-group label span { color: var(--text-muted); font-weight: 500; font-size: 11px; margin-right: 4px; }
   .field-group input, .field-group select, .field-group textarea {
-    padding:11px 14px; border:2px solid var(--border); border-radius:10px;
+    padding:12px 14px; border:2px solid #e2e8f0; border-radius:12px;
     font-family:'Cairo',sans-serif; font-size:14px; color:var(--text);
-    outline:none; transition:border 0.2s; background:white;
+    outline:none; transition:all 0.25s ease; background:#f8fafc;
   }
-  .field-group input:focus, .field-group select:focus, .field-group textarea:focus { border-color:var(--primary); }
+  .field-group input:focus, .field-group select:focus, .field-group textarea:focus { 
+    border-color:var(--primary); 
+    background: white;
+    box-shadow: 0 0 0 4px rgba(30, 61, 89, 0.1);
+  }
   .field-group textarea { resize:vertical; min-height:80px; }
 
-  /* Autocomplete */
+  /* Autocomplete & Dropdown Arrow */
   .autocomplete-wrap { position:relative; }
+  .autocomplete-wrap ::after {
+    content: "▼";
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: transform 0.2s ease;
+  }
+  .autocomplete-wrap.list-open ::after {
+    transform: translateY(-50%) rotate(180deg);
+  }
   .autocomplete-list {
     position:absolute; top:100%; right:0; left:0; background:white;
-    border:2px solid var(--primary); border-top:none; border-radius:0 0 10px 10px;
-    z-index:50; max-height:200px; overflow-y:auto; display:none;
+    border:2px solid var(--primary); border-top:none; border-radius:0 0 12px 12px;
+    z-index:50; max-height:220px; overflow-y:auto; display:none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   }
   .autocomplete-list.show { display:block; }
   .autocomplete-item {
-    padding:10px 14px; cursor:pointer; font-size:13px; transition:background 0.15s;
+    padding:12px 14px; cursor:pointer; font-size:13px; transition:background 0.15s;
+    border-bottom: 1px solid var(--bg);
+    font-weight: 600;
   }
-  .autocomplete-item:hover { background:var(--bg); }
+  .autocomplete-item:hover { background:#edf2f7; color: var(--primary-dark); }
 
   /* Finance calc */
   .finance-calc {
-    background:linear-gradient(135deg, #f5f8fa, #eef3f7); border:2px solid var(--border);
-    border-radius:12px; padding:16px; margin-top:8px;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9); 
+    border: 2px dashed #cbd5e1;
+    border-radius:14px; padding:18px; margin-top:12px;
   }
-  .calc-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; }
-  .calc-row:not(:last-child) { border-bottom:1px dashed var(--border); }
-  .calc-label { font-size:13px; color:var(--text-muted); font-weight:500; }
+  .calc-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; }
+  .calc-row:not(:last-child) { border-bottom:1px dashed #e2e8f0; }
+  .calc-label { font-size:13px; color:var(--text-muted); font-weight:600; }
   .calc-value { font-size:15px; font-weight:700; color:var(--text); }
   .calc-value.green { color:var(--success); }
   .calc-value.orange { color:var(--warning); }
   .calc-value.red { color:var(--danger); }
 
   /* BUTTONS */
-  .btn { padding:10px 20px; border-radius:10px; border:none; cursor:pointer; font-family:'Cairo',sans-serif; font-size:14px; font-weight:600; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
-  .btn-success { background:var(--success); color:white; }
-  .btn-success:hover { background:#228175; transform:translateY(-1px); }
+  .btn { padding:12px 24px; border-radius:12px; border:none; cursor:pointer; font-family:'Cairo',sans-serif; font-size:14px; font-weight:700; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+  .btn-success { background:var(--primary); color:white; box-shadow: 0 4px 12px rgba(30, 61, 89, 0.2); }
+  .btn-success:hover { background:var(--primary-dark); transform:translateY(-1px); }
   .btn-danger { background:var(--danger); color:white; }
   .btn-danger:hover { background:#bd2d39; }
   .btn-warning { background:var(--warning); color:white; }
@@ -212,7 +235,7 @@
     padding:3px 10px; border-radius:20px; font-size:11px; color:var(--text-muted); font-weight:600;
   }
 
-  /* زر القائمة الذكي المطور (3 شرط) */
+  /* الـ 3 شرط الذكية */
   .mobile-menu-btn {
     display: none;
     position: fixed;
@@ -228,37 +251,15 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 14px rgba(30, 61, 89, 0.3);
-    transition: all 0.25s ease;
+    transition: all(0.25s) ease;
   }
-  .mobile-menu-btn:active {
-    transform: scale(0.92);
-  }
-  .burger-icon {
-    width: 22px;
-    height: 16px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .burger-icon span {
-    display: block;
-    width: 100%;
-    height: 2.5px;
-    background-color: #ffffff;
-    border-radius: 2px;
-    transition: all 0.3s ease;
-  }
-  /* تحريك الشرط عند فتح القائمة الجانبية */
-  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
-  }
-  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(2) {
-    opacity: 0;
-  }
-  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
-  }
+  .mobile-menu-btn:active { transform: scale(0.92); }
+  .burger-icon { width: 22px; height: 16px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+  .burger-icon span { display: block; width: 100%; height: 2.5px; background-color: #ffffff; border-radius: 2px; transition: all 0.3s ease; }
+  
+  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(2) { opacity: 0; }
+  .sidebar.open ~ .mobile-menu-btn .burger-icon span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
   /* Responsive */
   @media(max-width:768px) {
@@ -266,7 +267,7 @@
     .sidebar.open { transform:translateX(0); }
     .main-content { margin-right:0; padding:16px; padding-top: 76px; }
     .stats-grid { grid-template-columns: 1fr; gap: 12px; }
-    .form-grid { grid-template-columns:1fr; }
+    .form-grid { grid-template-columns:1fr; gap: 16px; }
     .patient-info-grid { grid-template-columns:1fr; }
     .mobile-menu-btn { display:flex !important; }
   }
@@ -343,24 +344,24 @@
         <span class="date-badge">📅 <span id="today-date"></span></span>
       </div>
       <div class="card">
-        <div class="card-title">📋 بيانات المريض</div>
+        <div class="card-title">📋 بيانات المريض الأساسية</div>
         <div class="form-grid">
           <div class="field-group">
             <label>اسم المريض *</label>
             <input type="text" id="p-name" placeholder="الاسم كاملاً"/>
           </div>
           <div class="field-group">
-            <label>رقم الهاتف *</label>
-            <input type="tel" id="p-phone" placeholder="01xxxxxxxxx"/>
+            <label>رقم الهاتف <span>(اختياري)</span></label>
+            <input type="tel" id="p-phone" placeholder="01xxxxxxxxx (يمكن تركه فارغاً)"/>
           </div>
           <div class="field-group full">
-            <label>الإجراء الطبي *</label>
-            <div class="autocomplete-wrap">
-              <input type="text" id="p-procedure" placeholder="اكتب أو اختر الإجراء..." oninput="filterProcedures()" autocomplete="off"/>
+            <label>الإجراء الطبي العلاجي *</label>
+            <div class="autocomplete-wrap" id="autocomplete-wrapper">
+              <input type="text" id="p-procedure" placeholder="اضغط لاختيار الإجراء من القائمة أو اكتب..." onfocus="openProceduresList()" oninput="filterProcedures()" autocomplete="off"/>
               <div class="autocomplete-list" id="proc-list">
                 <div class="autocomplete-item" onclick="selectProcedure('حشو عصب')">حشو عصب</div>
-                <div class="autocomplete-item" onclick="selectProcedure('حشو')">حشو</div>
-                <div class="autocomplete-item" onclick="selectProcedure('خلع')">خلع</div>
+                <div class="autocomplete-item" onclick="selectProcedure('حشو عادي')">حشو عادي</div>
+                <div class="autocomplete-item" onclick="selectProcedure('خلع عادي')">خلع عادي</div>
                 <div class="autocomplete-item" onclick="selectProcedure('خلع جراحي')">خلع جراحي</div>
                 <div class="autocomplete-item" onclick="selectProcedure('خلع ضرس عقل')">خلع ضرس عقل</div>
                 <div class="autocomplete-item" onclick="selectProcedure('حشو عصب أطفال')">حشو عصب أطفال</div>
@@ -390,7 +391,7 @@
           <div class="calc-row"><span class="calc-label">👨‍⚕️ حصة الطبيب من المدفوع اليوم (60%)</span><span class="calc-value orange" id="calc-doctor-paid-share">0 جنيه</span></div>
           <div class="calc-row"><span class="calc-label">👨‍⚕️ حصة الطبيب المتبقية من الدين (60%)</span><span class="calc-value red" id="calc-doctor-rem-share">0 جنيه</span></div>
         </div>
-        <div style="margin-top:20px; display:flex; gap:12px;">
+        <div style="margin-top:24px; display:flex; gap:12px;">
           <button class="btn btn-success" onclick="savePatient()">💾 حفظ ومزامنة البيانات</button>
           <button class="btn" style="background:var(--border);color:var(--text);" onclick="clearForm()">🗑️ مسح</button>
         </div>
@@ -547,7 +548,6 @@ window._shortages = [];
 window._expenses = [];
 
 const now = new Date();
-// صيغة الشهر الحالية الموحدة YYYY-MM
 const currentYearMonth = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0');
 document.getElementById('history-month-select').value = currentYearMonth;
 document.getElementById('exp-date').value = now.toISOString().split('T')[0];
@@ -555,6 +555,15 @@ document.getElementById('today-date').textContent = now.toLocaleDateString('ar-E
 
 window.addEventListener('DOMContentLoaded', () => {
   loadAllData();
+  
+  // إغلاق قائمة الإجراءات تلقائياً عند الضغط في أي مكان خارجها
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('autocomplete-wrapper');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('proc-list').classList.remove('show');
+      wrap.classList.remove('list-open');
+    }
+  });
 });
 
 async function loadAllData() {
@@ -614,22 +623,42 @@ window.calcFinance = () => {
   document.getElementById('calc-doctor-rem-share').textContent = (remaining * 0.6).toLocaleString() + ' ج';
 };
 
-window.filterProcedures = () => {
-  const val = document.getElementById('p-procedure').value;
-  document.getElementById('proc-list').classList.toggle('show', val.length > 0);
+window.openProceduresList = () => {
+  document.getElementById('proc-list').classList.add('show');
+  document.getElementById('autocomplete-wrapper').classList.add('list-open');
 };
+
+window.filterProcedures = () => {
+  const val = document.getElementById('p-procedure').value.toLowerCase();
+  const items = document.querySelectorAll('.autocomplete-item');
+  let hasVisible = false;
+  
+  items.forEach(item => {
+    if(item.textContent.toLowerCase().includes(val)) {
+      item.style.display = 'block';
+      hasVisible = true;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  
+  document.getElementById('proc-list').classList.toggle('show', hasVisible);
+};
+
 window.selectProcedure = (v) => {
   document.getElementById('p-procedure').value = v;
   document.getElementById('proc-list').classList.remove('show');
+  document.getElementById('autocomplete-wrapper').classList.remove('list-open');
 };
 
 window.savePatient = async () => {
   const name = document.getElementById('p-name').value.trim();
-  const phone = document.getElementById('p-phone').value.trim();
+  const phone = document.getElementById('p-phone').value.trim(); // مابقاش إجباري
   const procedure = document.getElementById('p-procedure').value.trim();
   const total = parseFloat(document.getElementById('p-total').value)||0;
   const paid = parseFloat(document.getElementById('p-paid').value)||0;
-  if(!name || !phone || !procedure) { alert('برجاء تعبئة البيانات الأساسية الإجبارية للمريض'); return; }
+  
+  if(!name || !procedure) { alert('برجاء تعبئة اسم المريض والإجراء العلاجي المتبع أولاً'); return; }
 
   const remaining = total - paid;
   const todayStr = new Date().toISOString().split('T')[0];
@@ -637,11 +666,11 @@ window.savePatient = async () => {
   const list = paid > 0 ? [{ amount: paid, date: todayStr }] : [];
 
   const data = {
-    name, phone, procedure, total, paid, remaining,
+    name, phone: phone || "بدون رقم", procedure, total, paid, remaining,
     paymentsList: list,
     notes: "", xrays: [],
     createdAt: serverTimestamp(),
-    dateStr: todayStr // حقل مخصص لضمان الفلترة الشهرية بدقة وثبات
+    dateStr: todayStr
   };
 
   try {
@@ -719,8 +748,6 @@ window.renderAccounts = () => {
         pDate = new Date(p.dateStr);
       } else if (p.createdAt && p.createdAt.seconds) {
         pDate = new Date(p.createdAt.seconds * 1000);
-      } else if (p.paymentsList && p.paymentsList[0] && p.paymentsList[0].date) {
-        pDate = new Date(p.paymentsList[0].date);
       }
 
       if (pDate && !isNaN(pDate.getTime())) {
@@ -733,7 +760,6 @@ window.renderAccounts = () => {
         }
       }
       
-      // حساب الدفعات التي تمت في هذا الشهر بدقة بالغة
       if (p.paymentsList && Array.isArray(p.paymentsList)) {
         p.paymentsList.forEach(pay => {
           if(pay && pay.date) {
